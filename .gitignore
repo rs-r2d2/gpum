@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- project additions ---
+*.py[cod]
+.venv/
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+.env*
+
+# GPUM build output
+*.AppImage
+squashfs-root/

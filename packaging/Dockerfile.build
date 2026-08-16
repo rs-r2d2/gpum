@@ -1,0 +1,48 @@
+# Build container for the self-contained bundle (research D-02).
+#
+# Ubuntu 22.04 is chosen for its glibc (2.35), NOT for convenience. glibc is backward- but not
+# forward-compatible: a bundle built against 2.39 (Ubuntu 24.04) dies at launch on 22.04 with a
+# linker error, before any of GPUM's own error reporting can run. Building against 2.35 produces
+# a bundle that runs on 22.04, 24.04, Debian 12, and current Fedora.
+#
+# Do not "modernise" this base image without moving the supported floor deliberately.
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Ubuntu 22.04 ships Python 3.10; GPUM requires 3.11+. The container is pinned to 22.04 for
+# its *glibc*, not its Python, so the interpreter comes from deadsnakes rather than moving the
+# base image forward and raising the supported floor.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        software-properties-common gnupg \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        python3.11 python3.11-venv python3.11-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        binutils file desktop-file-utils \
+        libgl1 libegl1 libxkbcommon0 libxkbcommon-x11-0 \
+        libfontconfig1 libfreetype6 libdbus-1-3 \
+        libx11-xcb1 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+        libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+        wget ca-certificates zsync curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bootstrap pip for 3.11 specifically; the distro's python3-pip targets 3.10.
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+# appimagetool, extracted rather than run via FUSE (unavailable in most containers).
+RUN wget -q -O /tmp/appimagetool \
+        "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
+    && chmod +x /tmp/appimagetool \
+    && cd /opt && /tmp/appimagetool --appimage-extract >/dev/null \
+    && mv /opt/squashfs-root /opt/appimagetool \
+    && ln -s /opt/appimagetool/AppRun /usr/local/bin/appimagetool \
+    && rm /tmp/appimagetool
+
+# Marker the build script checks, so a bundle can never be produced against the host's glibc.
+RUN echo "gpum-build-container" > /etc/gpum-build-container
+
+WORKDIR /src

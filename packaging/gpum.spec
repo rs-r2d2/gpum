@@ -1,0 +1,143 @@
+# -*- mode: python ; coding: utf-8 -*-
+"""PyInstaller spec for the self-contained bundle (research D-03).
+
+Two separate exclusion rules, for two different reasons.
+
+**Excluded for size**: PySide6 installs at roughly 400 MB and GPUM uses QtCore, QtGui, and
+QtWidgets only. Without trimming, the download is unusable.
+
+**Never bundled — correctness, not size**: NVIDIA driver libraries. NVML is version-locked to
+the host's kernel module. A copy taken from the build machine either fails to initialise or,
+worse, misreports against a different host driver — wrong numbers presented as measurements on
+someone else's machine, silently. `nvidia-ml-py` is pure Python over ctypes and loads
+libnvidia-ml.so.1 by name at call time, so excluding it is sufficient and correct.
+
+`packaging/verify-appdir.sh` enforces both as build-blocking checks, because neither failure is
+visible on the build host.
+"""
+
+import sys
+from pathlib import Path
+
+from PyInstaller.utils.hooks import copy_metadata
+
+sys.setrecursionlimit(5000)
+
+PROJECT_ROOT = Path(SPECPATH).parent
+
+# Size: Qt modules GPUM does not use.
+EXCLUDED_MODULES = [
+    "PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets", "PySide6.QtWebEngineQuick",
+    "PySide6.QtQuick", "PySide6.QtQuick3D", "PySide6.QtQuickWidgets", "PySide6.QtQml",
+    "PySide6.Qt3DCore", "PySide6.Qt3DRender", "PySide6.Qt3DAnimation", "PySide6.Qt3DExtras",
+    "PySide6.QtMultimedia", "PySide6.QtMultimediaWidgets", "PySide6.QtCharts",
+    "PySide6.QtDataVisualization", "PySide6.QtBluetooth", "PySide6.QtNfc",
+    "PySide6.QtPositioning", "PySide6.QtLocation", "PySide6.QtSerialPort",
+    "PySide6.QtSql", "PySide6.QtTest", "PySide6.QtPdf", "PySide6.QtPdfWidgets",
+    "PySide6.QtDesigner", "PySide6.QtHelp", "PySide6.QtUiTools",
+    "tkinter", "unittest", "pydoc", "doctest", "pytest", "numpy", "PIL",
+]
+
+# Correctness: driver components must come from the host, never from this build machine.
+FORBIDDEN_BINARY_PREFIXES = (
+    "libnvidia-", "libcuda", "libGLX_nvidia", "libnvcuvid", "libnvoptix", "libglvnd",
+)
+
+# Size: Qt shared objects pulled in transitively. Excluding the Python module is not enough —
+# PySide6's hooks collect the libraries as dependencies regardless, which is how a 400 MB Qt
+# install leaks back into a bundle that only needs three modules.
+UNUSED_QT_LIBRARY_PREFIXES = (
+    "libQt6Quick", "libQt6Qml", "libQt6WebEngine", "libQt6WebChannel", "libQt6WebSockets",
+    "libQt63D", "libQt6Multimedia", "libQt6Charts", "libQt6DataVisualization",
+    "libQt6Designer", "libQt6Help", "libQt6Sql", "libQt6Test", "libQt6Pdf",
+    "libQt6Bluetooth", "libQt6Nfc", "libQt6Positioning", "libQt6Location",
+    "libQt6SerialPort", "libQt6Quick3D", "libQt6ShaderTools", "libQt6Spatial",
+)
+
+# Directories of Qt plugins GPUM never loads.
+UNUSED_PLUGIN_DIRS = (
+    "qml", "Qt/qml", "plugins/multimedia", "plugins/sqldrivers", "plugins/webview",
+    "plugins/designer", "plugins/geometryloaders", "plugins/renderers", "plugins/sceneparsers",
+)
+
+
+def _strip_driver_libraries(binaries):
+    """Remove host-driver components (correctness) and unused Qt modules (size)."""
+    kept = []
+    for entry in binaries:
+        dest = entry[0]
+        name = Path(dest).name
+        if any(name.startswith(prefix) for prefix in FORBIDDEN_BINARY_PREFIXES):
+            print(f"gpum.spec: excluding driver library {name} (research D-03)")
+            continue
+        if any(name.startswith(prefix) for prefix in UNUSED_QT_LIBRARY_PREFIXES):
+            continue
+        if any(part in dest for part in UNUSED_PLUGIN_DIRS):
+            continue
+        kept.append(entry)
+    return kept
+
+
+def _strip_data(datas):
+    kept = []
+    for entry in datas:
+        dest = entry[0]
+        name = Path(dest).name
+        # PySide6's hook collects some Qt libraries as *data*, not binaries, so the same
+        # prefix rule has to be applied on both lists or the exclusions leak straight back in.
+        if any(name.startswith(prefix) for prefix in UNUSED_QT_LIBRARY_PREFIXES):
+            continue
+        if any(part in dest for part in UNUSED_PLUGIN_DIRS):
+            continue
+        # Translations are ~30 MB and GPUM ships English only.
+        if "/translations/" in dest or dest.startswith("PySide6/Qt/translations"):
+            continue
+        kept.append(entry)
+    return kept
+
+
+a = Analysis(
+    [str(PROJECT_ROOT / "src" / "gpum" / "__main__.py")],
+    pathex=[str(PROJECT_ROOT / "src")],
+    binaries=[],
+    # Package metadata must travel with the bundle: `importlib.metadata` is the single source
+    # of version truth (research D-13), and without it the bundle reports a different version
+    # from the pip install, breaking the equivalence FR-026 requires.
+    datas=[
+        (str(PROJECT_ROOT / "src" / "gpum" / "resources"), "gpum/resources"),
+        *copy_metadata("gpum"),
+    ],
+    hiddenimports=["gpum", "pynvml", "psutil"],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=EXCLUDED_MODULES,
+    noarchive=False,
+)
+
+a.binaries = _strip_driver_libraries(a.binaries)
+a.datas = _strip_data(a.datas)
+
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name="gpum",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=True,
+    upx=False,
+    console=False,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=True,
+    upx=False,
+    name="gpum",
+)

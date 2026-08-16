@@ -1,0 +1,66 @@
+{
+  "device_count": 1,
+  "driver_version": "580.159.03",
+  "devices": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 5060 Ti",
+      "uuid": "GPU-d34b42a9-328a-0612-e0bb-0dbfb3c29833",
+      "pci_bus_id": "00000000:01:00.0",
+      "memory_v1": {
+        "total": 17103323136,
+        "used": 884473856,
+        "free": 16218849280
+      },
+      "memory_v2": {
+        "total": 17103323136,
+        "used": 390070272,
+        "free": 16218849280,
+        "reserved": 494403584
+      },
+      "utilization": {
+        "gpu": 5,
+        "memory": 10
+      },
+      "mig_mode_error": {
+        "type": "NVMLError_NotSupported",
+        "code": 3,
+        "msg": "Not Supported"
+      },
+      "processes": [
+        {
+          "pid": 3099,
+          "usedGpuMemory": 167600128,
+          "source": "nvmlDeviceGetGraphicsRunningProcesses"
+        },
+        {
+          "pid": 3306,
+          "usedGpuMemory": 32505856,
+          "source": "nvmlDeviceGetGraphicsRunningProcesses"
+        },
+        {
+          "pid": 6716,
+          "usedGpuMemory": 38207488,
+          "source": "nvmlDeviceGetGraphicsRunningProcesses"
+        },
+        {
+          "pid": 7334,
+          "usedGpuMemory": 2424832,
+          "source": "nvmlDeviceGetGraphicsRunningProcesses"
+        },
+        {
+          "pid": 7369,
+          "usedGpuMemory": 93061120,
+          "source": "nvmlDeviceGetGraphicsRunningProcesses"
+        }
+      ]
+    }
+  ],
+  "error_responses": {
+    "invalid_index": {
+      "type": "NVMLError_Uninitialized",
+      "code": 1,
+      "msg": "Uninitialized"
+    }
+  }
+}

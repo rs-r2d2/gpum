@@ -1,0 +1,19 @@
+#!/bin/sh
+# AppImage entry point.
+#
+# LD_LIBRARY_PATH must point at PyInstaller's _internal directory, which is where the bundled
+# shared objects actually land. Qt's xcb platform plugin dlopens libxcb-cursor.so.0 by name
+# rather than linking it, so if the loader cannot see that directory the plugin fails and the
+# application aborts with "no Qt platform plugin could be initialized" — on a real display
+# only, which is why a headless smoke test does not catch it.
+#
+# Deliberately sets no XDG_CONFIG_HOME: both distribution forms must read and write the same
+# ~/.config/gpum/gpum.conf so a user moving between them keeps their settings (FR-028). A
+# well-meant wrapper that isolates config per-bundle is exactly how that requirement breaks.
+HERE="$(dirname "$(readlink -f "${0}")")"
+INTERNAL="${HERE}/usr/bin/_internal"
+
+export PATH="${HERE}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${INTERNAL}:${INTERNAL}/PySide6/Qt/lib:${HERE}/usr/lib:${LD_LIBRARY_PATH:-}"
+
+exec "${HERE}/usr/bin/gpum" "$@"

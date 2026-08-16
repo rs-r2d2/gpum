@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-08-16T18:36:45+0530",
+  "driver_version": "580.159.03",
+  "gpu_model": "NVIDIA GeForce RTX 5060 Ti",
+  "duration_s": 120.0,
+  "sample_count": 58,
+  "max_memory_deviation_pct": 2.212,
+  "mean_memory_deviation_pct": 0.079,
+  "total_memory_mismatches": 0,
+  "process_match_rate": 100.0,
+  "process_samples": 290,
+  "mean_cycle_cost_ms": 19.424,
+  "p99_cycle_cost_ms": 22.567,
+  "max_cycle_cost_ms": 22.567,
+  "mean_device_query_ms": 0.031,
+  "p99_device_query_ms": 0.119,
+  "max_device_query_ms": 0.119,
+  "recommended_timeout_ms": 50,
+  "notes": []
+}

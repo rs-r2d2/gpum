@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=GPUM
+GenericName=GPU Monitor
+Comment=Live GPU memory and process monitor
+Exec=gpum
+Icon=gpum
+Terminal=false
+Categories=System;Monitor;
+Keywords=gpu;nvidia;monitor;memory;
+StartupNotify=true

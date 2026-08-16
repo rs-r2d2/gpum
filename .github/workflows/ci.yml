@@ -1,0 +1,53 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Typecheck
+        run: mypy
+      - name: Test (no GPU present)
+        run: pytest
+
+  bundle:
+    # The bundle MUST be built in the 22.04 container, never on the runner: glibc is backward-
+    # but not forward-compatible, so a bundle built on a newer host dies at launch on older
+    # distributions before any of GPUM's own error reporting can run (research D-02).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container
+        run: docker build -f packaging/Dockerfile.build -t gpum-build .
+      - name: Build AppImage
+        run: docker run --rm -v "$PWD:/src" gpum-build /src/packaging/build-appimage.sh
+      - name: Verify it runs on the oldest supported target
+        run: |
+          docker run --rm -v "$PWD/dist:/dist:ro" ubuntu:22.04 bash -c '
+            /dist/GPUM-*-x86_64.AppImage --appimage-extract >/dev/null
+            QT_QPA_PLATFORM=offscreen ./squashfs-root/AppRun --version'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Packaging equivalence suite
+        run: |
+          pip install -e ".[dev]"
+          pytest -m packaging
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpum-appimage
+          path: dist/*.AppImage

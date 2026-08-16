@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpum"
+version = "0.1.0"
+description = "Live GPU memory and process monitor across NVIDIA, AMD and Intel"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "LGPL-3.0-or-later" }
+
+dependencies = [
+    "PySide6>=6.6",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+# Vendor bindings are optional at install time (constitution tech constraints, research D-13).
+# A missing import is treated exactly like a missing driver.
+nvidia = ["nvidia-ml-py>=12.535"]
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.4",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+all = ["gpum[nvidia]"]
+# Build-time only. Deliberately not a runtime dependency.
+packaging-tools = ["pyinstaller>=6.0"]
+
+[project.scripts]
+gpum = "gpum.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gpum = ["resources/*.svg"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/gpum/core", "src/gpum/backends/base.py", "src/gpum/adapters/base.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not hardware and not packaging' -q"
+markers = [
+    "hardware: requires real GPU hardware; deselected by default (constitution Principle IV)",
+    "packaging: requires a built AppImage; deselected by default",
+]
+# QT_QPA_PLATFORM=offscreen is set in tests/conftest.py so no plugin is required.
