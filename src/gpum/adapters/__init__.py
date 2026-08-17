@@ -14,11 +14,39 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from gpum.adapters.base import ProcessAttributionProvider, ProcessIdentityProvider
 
 __all__ = [
+    "platform_autostart",
     "platform_attribution_provider",
     "platform_identity_provider",
     "present_gpus",
     "tray_availability",
 ]
+
+
+def platform_autostart():
+    """Start-at-login for this platform (feature 007, research D-06/D-07).
+
+    Every implementation exposes ``is_autostart_enabled``, ``enable_autostart``,
+    ``disable_autostart`` and ``autostart_path``, so the settings dialog needs no platform
+    knowledge — which is the point. ``ui/app.py`` previously imported the *Linux* module
+    directly and unconditionally, so on Windows the toggle disclosed a
+    ``~/.config/autostart`` path, wrote a file nothing reads, and reported success. Claiming a
+    capability that is absent is the same fault as rendering an unmeasured metric as zero.
+
+    Platforms without an implementation get a null object that reports the feature as
+    unavailable rather than pretending it worked.
+    """
+    if sys.platform.startswith("linux"):
+        from gpum.adapters.linux import autostart
+
+        return autostart
+    if sys.platform.startswith("win"):
+        from gpum.adapters.windows import autostart
+
+        return autostart
+
+    from gpum.adapters import null_autostart
+
+    return null_autostart
 
 
 def tray_availability(qt_reports_available: bool):

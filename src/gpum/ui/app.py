@@ -79,8 +79,13 @@ def run(
     app.aboutToQuit.connect(_on_quit)
 
     def _open_settings() -> None:
-        from gpum.adapters.linux import autostart
+        # Resolved through gpum.adapters, which holds the single OS switch. Importing
+        # gpum.adapters.linux here bound the settings dialog to one platform and made the
+        # autostart toggle lie on every other (feature 007, D-07).
+        from gpum.adapters import platform_autostart
         from gpum.ui.settings_dialog import SettingsDialog
+
+        autostart = platform_autostart()
 
         dialog = SettingsDialog(
             preferences,

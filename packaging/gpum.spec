@@ -9,11 +9,17 @@ QtWidgets only. Without trimming, the download is unusable.
 **Never bundled — correctness, not size**: NVIDIA driver libraries. NVML is version-locked to
 the host's kernel module. A copy taken from the build machine either fails to initialise or,
 worse, misreports against a different host driver — wrong numbers presented as measurements on
-someone else's machine, silently. `nvidia-ml-py` is pure Python over ctypes and loads
-libnvidia-ml.so.1 by name at call time, so excluding it is sufficient and correct.
+someone else's machine, silently. `nvidia-ml-py` is pure Python over ctypes and resolves the
+library at call time — `libnvidia-ml.so.1` by name on Linux, `System32\nvml.dll` by absolute
+path on Windows — so excluding it is sufficient and correct on both.
 
-`packaging/verify-appdir.sh` enforces both as build-blocking checks, because neither failure is
-visible on the build host.
+**One spec, two platforms** (feature 007). The tables below are selected per platform because
+the same libraries carry different names (`libQt6Quick.so.6` vs `Qt6Quick.dll`) and paths use
+different separators. A single Linux-shaped table would appear configured and silently exclude
+nothing on Windows.
+
+`packaging/verify-appdir.sh` (Linux) and `packaging/windows/verify-dist.ps1` (Windows) enforce
+these as build-blocking checks, because none of these failures is visible on the build host.
 """
 
 import sys
@@ -39,19 +45,39 @@ EXCLUDED_MODULES = [
 ]
 
 # Correctness: driver components must come from the host, never from this build machine.
-FORBIDDEN_BINARY_PREFIXES = (
+#
+# Both platforms, because the reason is the same on both: the management library is
+# version-locked to the host's kernel driver, and a copy taken from the build machine either
+# fails to initialise or misreports against a different host driver — wrong numbers presented as
+# measurements, silently. On Windows `nvidia-ml-py` loads `%WINDIR%\System32\nvml.dll` (DCH) or
+# `%ProgramFiles%\NVIDIA Corporation\NVSMI\nvml.dll` by absolute path at call time, so excluding
+# these is both sufficient and correct (feature 007, research D-03).
+FORBIDDEN_BINARY_PREFIXES_LINUX = (
     "libnvidia-", "libcuda", "libGLX_nvidia", "libnvcuvid", "libnvoptix", "libglvnd",
+)
+FORBIDDEN_BINARY_PREFIXES_WINDOWS = (
+    "nvml", "nvcuda", "nvapi", "nvfatbinaryloader", "nvrtc", "cudart",
+)
+FORBIDDEN_BINARY_PREFIXES = (
+    FORBIDDEN_BINARY_PREFIXES_WINDOWS if sys.platform.startswith("win")
+    else FORBIDDEN_BINARY_PREFIXES_LINUX
 )
 
 # Size: Qt shared objects pulled in transitively. Excluding the Python module is not enough —
 # PySide6's hooks collect the libraries as dependencies regardless, which is how a 400 MB Qt
 # install leaks back into a bundle that only needs three modules.
-UNUSED_QT_LIBRARY_PREFIXES = (
-    "libQt6Quick", "libQt6Qml", "libQt6WebEngine", "libQt6WebChannel", "libQt6WebSockets",
-    "libQt63D", "libQt6Multimedia", "libQt6Charts", "libQt6DataVisualization",
-    "libQt6Designer", "libQt6Help", "libQt6Sql", "libQt6Test", "libQt6Pdf",
-    "libQt6Bluetooth", "libQt6Nfc", "libQt6Positioning", "libQt6Location",
-    "libQt6SerialPort", "libQt6Quick3D", "libQt6ShaderTools", "libQt6Spatial",
+#
+# Named per platform: the same libraries are `libQt6Quick.so.6` on Linux and `Qt6Quick.dll` on
+# Windows, so a single table silently excludes nothing on the other platform (feature 007).
+_UNUSED_QT_MODULES = (
+    "Quick", "Qml", "WebEngine", "WebChannel", "WebSockets",
+    "3D", "Multimedia", "Charts", "DataVisualization",
+    "Designer", "Help", "Sql", "Test", "Pdf",
+    "Bluetooth", "Nfc", "Positioning", "Location",
+    "SerialPort", "Quick3D", "ShaderTools", "Spatial",
+)
+UNUSED_QT_LIBRARY_PREFIXES = tuple(
+    (f"Qt6{m}" if sys.platform.startswith("win") else f"libQt6{m}") for m in _UNUSED_QT_MODULES
 )
 
 # Directories of Qt plugins GPUM never loads.
@@ -61,11 +87,21 @@ UNUSED_PLUGIN_DIRS = (
 )
 
 
+def _as_posix(dest):
+    """Normalise a destination path for substring matching.
+
+    PyInstaller emits native separators, so a table written with ``/`` matches nothing on
+    Windows — the exclusion would appear to be configured and silently do nothing, which is the
+    worst of the three outcomes (feature 007).
+    """
+    return str(dest).replace("\\", "/")
+
+
 def _strip_driver_libraries(binaries):
     """Remove host-driver components (correctness) and unused Qt modules (size)."""
     kept = []
     for entry in binaries:
-        dest = entry[0]
+        dest = _as_posix(entry[0])
         name = Path(dest).name
         if any(name.startswith(prefix) for prefix in FORBIDDEN_BINARY_PREFIXES):
             print(f"gpum.spec: excluding driver library {name} (research D-03)")
@@ -81,7 +117,7 @@ def _strip_driver_libraries(binaries):
 def _strip_data(datas):
     kept = []
     for entry in datas:
-        dest = entry[0]
+        dest = _as_posix(entry[0])
         name = Path(dest).name
         # PySide6's hook collects some Qt libraries as *data*, not binaries, so the same
         # prefix rule has to be applied on both lists or the exclusions leak straight back in.
