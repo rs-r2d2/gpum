@@ -64,7 +64,8 @@ class TestRealAttribution:
     def test_process_memory_is_never_zero_when_unavailable(
         self, backend: NvidiaBackend
     ) -> None:
-        """On Windows/WDDM this is the expected path; on Linux memory should be present."""
+        """Guards the shape, not the platform: whenever a figure is absent it must be absent, not
+        zero. On the supported target memory should normally be present."""
         provider = NvmlAttributionProvider(backend)
         result = provider.attribute(list(backend.enumerate_devices()))
         for process in result.processes:

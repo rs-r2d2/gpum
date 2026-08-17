@@ -7,9 +7,9 @@ Implementations MUST NOT import ``gpum.core``, ``gpum.ui``, or ``gpum.adapters``
 ``tests/unit/test_import_boundaries.py``.
 
 Note what is absent: there is no ``get_processes()``. Per-process attribution is a separate
-contract (``gpum.adapters.base``) because its source is not always the vendor — NVIDIA cannot
-supply it on Windows under WDDM, while Windows itself can supply it for every vendor. Folding
-it in here would have forced platform-specific code inside a vendor module (research D-03).
+contract (``gpum.adapters.base``) because its source is not always the vendor — where a driver
+cannot supply it, an OS-level, vendor-neutral source can, for every vendor at once. Folding it
+in here would have forced platform-specific code inside a vendor module (research D-03).
 """
 
 from __future__ import annotations

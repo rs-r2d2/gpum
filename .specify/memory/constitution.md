@@ -1,31 +1,42 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: none (unfilled template scaffold) → 1.0.0
-Bump rationale: Initial ratification. All template placeholders replaced with concrete,
-project-specific governance for the GPUM cross-vendor GPU monitor.
+Version change: 1.0.0 → 2.0.0
+Bump rationale: MAJOR. Principle II's platform obligation is narrowed from "Linux, Windows, and
+macOS" to Linux alone, and the CI gate and distribution constraint that named three platforms
+are narrowed to match. This removes a standing obligation, so prior compliance statements that
+depended on it are no longer valid as written — a backward-incompatible governance change.
 
 Modified principles:
-  - [PRINCIPLE_1_NAME] → I. Vendor-Agnostic Abstraction (NON-NEGOTIABLE)
-  - [PRINCIPLE_2_NAME] → II. Platform Parity by Capability, Not by Fork
-  - [PRINCIPLE_3_NAME] → III. Non-Blocking Live Updates (NON-NEGOTIABLE)
-  - [PRINCIPLE_4_NAME] → IV. Test-First on Simulated Hardware
-  - [PRINCIPLE_5_NAME] → V. Read-Only by Default, Least Privilege
+  - II. Platform Parity by Capability, Not by Fork → II. Single Target, Adapters Kept Honest.
+    The three-platform mandate is withdrawn. What is retained, deliberately: OS-specific logic
+    stays confined to platform adapters, per-platform forks of a feature stay prohibited, and
+    capabilities that cannot be supplied still degrade visibly and are recorded in the matrix.
+    The architecture rule was never the same claim as the support claim, and only the support
+    claim is being dropped.
 
-Added sections:
-  - Technology & Architecture Constraints (was [SECTION_2_NAME])
-  - Development Workflow & Quality Gates (was [SECTION_3_NAME])
-  - Governance (populated)
+Modified sections:
+  - Technology & Architecture Constraints → "Distribution": "all three supported platforms" →
+    Linux.
+  - Development Workflow & Quality Gates → CI gates run on Linux, not on three platforms.
 
+Added sections: none
 Removed sections: none
 
-Deferred TODOs: none
+Resolves: the open Principle II deviation carried since feature 001 (macOS deferred against a
+three-platform mandate), recorded in specs/001-gpu-usage-monitor/plan.md § Complexity Tracking
+and tracked as task T110. The deviation is closed by narrowing the principle to what the project
+actually delivers, not by claiming platforms it does not have.
+
+Deferred TODOs: none. The Principle V deviation (feature 002, T080 — autostart writes a
+user-scoped desktop file) is unrelated and remains open.
 -->
 
 # GPUM Constitution
 
-GPUM is a platform-agnostic desktop tool that reports live GPU utilization and the processes
-consuming GPU resources across NVIDIA, AMD, and Intel hardware.
+GPUM is a Linux desktop tool that reports live GPU utilization and the processes consuming GPU
+resources across NVIDIA, AMD, and Intel hardware. It is vendor-agnostic by design and
+single-platform by scope; those are different claims and are governed separately below.
 
 ## Core Principles
 
@@ -46,19 +57,32 @@ honestly rather than implying idle usage.
 *Rationale: Vendor telemetry surfaces are unstable and unevenly capable. Isolating them is the
 only way a three-vendor tool stays maintainable and truthful.*
 
-### II. Platform Parity by Capability, Not by Fork
+### II. Single Target, Adapters Kept Honest
 
-GPUM MUST run on Linux, Windows, and macOS from one codebase. OS-specific logic MUST be
-confined to platform adapter modules; feature code MUST NOT contain OS conditionals. Forked
-implementations of the same feature per platform are prohibited.
+**Linux is the only supported platform.** GPUM MUST run on Linux; it makes no claim about
+Windows or macOS, and MUST NOT be described, packaged, classified, or CI-gated as if it did.
+Support for an unclaimed platform MUST NOT be implied by shipping partial code for it: a
+half-built adapter reads as a promise.
 
-Where a platform cannot supply a capability, the capability MUST degrade visibly and be
-recorded in a maintained capability matrix covering every supported vendor × platform pair.
-The matrix MUST be updated in the same change that alters support. Absence of a GPU, of a
-driver, or of any supported backend MUST leave the application running and usable, not crashed.
+OS-specific logic MUST nonetheless be confined to platform adapter modules, and feature code
+MUST NOT contain OS conditionals. Forked implementations of the same feature per platform remain
+prohibited. This is an architecture rule, not a portability claim, and it survives the narrowed
+scope for two reasons: it is what keeps the honest-degradation guarantee reachable when GPUM is
+run somewhere unsupported, and it is what makes adding a platform later an additive change
+rather than a rewrite.
 
-*Rationale: "Platform agnostic" is a promise about behavior, not a build target. A capability
-matrix makes the promise auditable and prevents silent regressions on untested platforms.*
+Where a capability cannot be supplied — by the platform, the vendor, or the driver — it MUST
+degrade visibly and be recorded in a maintained capability matrix. The matrix MUST be updated in
+the same change that alters support. Absence of a GPU, of a driver, or of any supported backend
+MUST leave the application running and usable, not crashed.
+
+*Rationale: the earlier three-platform mandate was aspirational and was never met — macOS was
+deferred from the first feature and stayed deferred, leaving a standing violation of the
+project's own constitution and a capability matrix two-thirds populated with "deferred". A
+governing document that records an intention rather than a fact cannot be used to audit
+anything. Narrowing the claim to Linux makes the matrix an accurate record again. What is
+retained is the part that earned its place: adapters and visible degradation are why "no GPU",
+"no driver", and "no status area" are all survivable states rather than crashes.*
 
 ### III. Non-Blocking Live Updates (NON-NEGOTIABLE)
 
@@ -120,13 +144,13 @@ during incidents. It earns trust by holding minimum privilege and keeping what i
   A missing optional dependency disables one backend and nothing else.
 - **Licensing**: Third-party dependencies MUST be license-compatible with the project's chosen
   distribution license; copyleft-incompatible additions MUST be rejected in review.
-- **Distribution**: The application MUST be installable and launchable on all three supported
-  platforms without a compiler toolchain on the user's machine.
+- **Distribution**: The application MUST be installable and launchable on Linux without a
+  compiler toolchain on the user's machine.
 
 ## Development Workflow & Quality Gates
 
 - Every change MUST pass automated linting, type checking, and the full test suite before
-  merge; these gates MUST run in CI on Linux, Windows, and macOS.
+  merge; these gates MUST run in CI on Linux, across every supported Python version.
 - Every pull request MUST state which principles it touches and MUST justify any deviation in
   the change description. Unjustified deviations MUST block merge.
 - Changes to the backend interface MUST update every backend and the shared contract tests in
@@ -163,4 +187,4 @@ satisfy them requires an amendment first. All other deviations MUST be recorded 
 description with their justification. The constitution MUST be reviewed for accuracy whenever
 a new vendor or platform is added.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-16
+**Version**: 2.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-17

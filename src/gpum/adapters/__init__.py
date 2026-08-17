@@ -23,24 +23,21 @@ __all__ = [
 
 
 def platform_autostart():
-    """Start-at-login for this platform (feature 007, research D-06/D-07).
+    """Start-at-login for this platform (research D-06/D-07).
 
     Every implementation exposes ``is_autostart_enabled``, ``enable_autostart``,
     ``disable_autostart`` and ``autostart_path``, so the settings dialog needs no platform
     knowledge — which is the point. ``ui/app.py`` previously imported the *Linux* module
-    directly and unconditionally, so on Windows the toggle disclosed a
-    ``~/.config/autostart`` path, wrote a file nothing reads, and reported success. Claiming a
-    capability that is absent is the same fault as rendering an unmeasured metric as zero.
+    directly and unconditionally, so anywhere else the toggle disclosed a ``~/.config/autostart``
+    path, wrote a file nothing reads, and reported success. Claiming a capability that is absent
+    is the same fault as rendering an unmeasured metric as zero.
 
-    Platforms without an implementation get a null object that reports the feature as
-    unavailable rather than pretending it worked.
+    Linux is the only supported platform. Anything else gets a null object that reports the
+    feature as unavailable rather than pretending it worked — the switch stays because the
+    honest-degradation guarantee has to hold even off the supported target.
     """
     if sys.platform.startswith("linux"):
         from gpum.adapters.linux import autostart
-
-        return autostart
-    if sys.platform.startswith("win"):
-        from gpum.adapters.windows import autostart
 
         return autostart
 
@@ -88,10 +85,6 @@ def platform_identity_provider() -> ProcessIdentityProvider:
         from gpum.adapters.linux.identity import LinuxIdentityProvider
 
         return LinuxIdentityProvider()
-    if sys.platform.startswith("win"):
-        from gpum.adapters.windows.identity import WindowsIdentityProvider
-
-        return WindowsIdentityProvider()
 
     from gpum.adapters.null import NullIdentityProvider
 
@@ -101,9 +94,9 @@ def platform_identity_provider() -> ProcessIdentityProvider:
 def platform_attribution_provider() -> ProcessAttributionProvider | None:
     """A vendor-neutral, OS-supplied attribution source, where one exists.
 
-    Linux has DRM ``fdinfo`` and Windows has the GPU performance counters, but neither is
-    implemented in this release — NVIDIA supplies attribution directly on Linux, which is this
-    release's target (research D-03). Returning ``None`` is correct and supported: devices are
-    then marked with an explicit reason rather than shown with an empty process list.
+    Linux has DRM ``fdinfo``, which is not implemented — NVIDIA supplies attribution directly,
+    which is enough for the supported target (research D-03). Returning ``None`` is correct and
+    supported: devices are then marked with an explicit reason rather than shown with an empty
+    process list.
     """
     return None

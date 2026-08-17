@@ -73,8 +73,8 @@ SCENARIOS: dict[str, Scenario] = {
     ),
     "no-attribution": Scenario(
         name="no-attribution",
-        description="Device metrics work, per-process data does not — the NVIDIA/WDDM shape "
-                    "(V-3). The UI must explain, not show an empty list.",
+        description="Device metrics work, per-process data does not — the shape of a driver "
+                    "that lists no processes (V-3). The UI must explain, not show an empty list.",
         devices=(
             DeviceSpec(
                 "GPU-fake-0001",

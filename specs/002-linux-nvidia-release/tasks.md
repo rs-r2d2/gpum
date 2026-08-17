@@ -257,7 +257,7 @@ unreachable.
 - The default suite must stay green throughout with no GPU and no bundle. If a change makes
   hardware or a bundle mandatory for `pytest`, that change is wrong (Principle IV).
 - **T080 is governance, not code**, and blocks nothing.
-- Feature 001's remaining Windows tasks stay out of scope and untouched.
+- Feature 001's remaining Windows tasks stay out of scope and untouched. *(2026-08-17: those tasks were subsequently dropped outright — Windows is no longer a target.)*
 
 
 ---
@@ -309,4 +309,4 @@ forbids it as written.
 **Proposed PATCH amendment**: widen Principle V to "its own saved user preferences and
 user-initiated, user-scoped desktop-integration entries that it can also remove."
 
-Feature 001's macOS deferral (Principle II) also remains open and unchanged.
+Feature 001's macOS deferral (Principle II) also remains open and unchanged. *(2026-08-17: closed by constitution amendment 2.0.0, which narrowed Principle II to Linux only.)*

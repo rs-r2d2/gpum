@@ -191,7 +191,7 @@ class NvidiaBackend:
         return BackendCapabilities(
             device_memory=True,
             device_utilization=True,
-            # NVML reports per-process memory on Linux. On Windows under WDDM it does not, and
+            # NVML reports per-process memory on the supported target. Where a driver does not,
             # the attribution provider reports that honestly instead (research D-03).
             per_process_memory=True,
             per_process_utilization=False,

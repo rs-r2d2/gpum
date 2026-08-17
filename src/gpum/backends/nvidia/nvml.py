@@ -35,8 +35,9 @@ class NvmlUnavailable(NvmlError):
 @dataclass(frozen=True, slots=True)
 class NvmlProcessInfo:
     pid: int
-    #: Bytes, or ``None`` when the driver model cannot report it — notably NVIDIA under WDDM
-    #: on Windows, where NVML returns the PIDs but no usable memory figure (research D-03).
+    #: Bytes, or ``None`` when the driver cannot report it — NVML returns the PID but no usable
+    #: memory figure. Kept nullable rather than defaulted to 0: a zero here would travel up as a
+    #: measurement (research D-03).
     used_gpu_memory: int | None
 
 

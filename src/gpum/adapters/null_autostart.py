@@ -1,4 +1,8 @@
-"""Autostart fallback for platforms without an implementation (feature 007, D-07).
+"""Autostart fallback for platforms without an implementation (research D-07).
+
+Linux is the only supported platform, so in practice this is what runs when GPUM is started
+somewhere unsupported. It exists so that "unsupported" still means a truthful answer rather
+than an exception or a silent lie.
 
 Reports the feature as unavailable and does nothing, rather than raising or — worse — appearing
 to succeed. A toggle that writes something no platform reads and then reports "enabled" is the

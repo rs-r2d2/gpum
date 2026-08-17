@@ -72,7 +72,7 @@ unavailable.
 | **V. Read-Only, Least Privilege** | ✅ PASS | Enforced structurally: the NVML wrapper exposes no setter, and an automated test asserts no module references `nvmlDeviceSetPowerManagementLimit` or its siblings. See Complexity Tracking. |
 
 **Gate result**: passes with no new violations. Feature 002's Principle V item (autostart) and
-feature 001's Principle II item (macOS) remain open and unchanged by this work.
+feature 001's Principle II item (macOS) remain open and unchanged by this work. *(2026-08-17: the Principle II item has since been closed by constitution amendment 2.0.0; Principle V remains open.)*
 
 ## Project Structure
 

@@ -1,13 +1,14 @@
 """NVML per-process attribution (contracts/process-attribution.md).
 
-A *companion* provider to the NVIDIA backend rather than part of the backend interface,
-because attribution's source varies by platform, not only by vendor: NVML supplies it on Linux
-but cannot on Windows under WDDM, where the OS's own counters are the answer for every vendor
-(research D-03).
+A *companion* provider to the NVIDIA backend rather than part of the backend interface, because
+attribution's source varies by driver and platform, not only by vendor — an OS-supplied,
+vendor-neutral source is the right answer wherever NVML has none (research D-03).
 
-The WDDM case is handled honestly here: NVML still returns the PIDs, so the processes are
-listed, but their memory is reported ``UNSUPPORTED`` with a reason rather than ``0``. Showing
-zero would say "this process is using no GPU memory", which is false.
+NVML supplies per-process memory on the supported target (Linux, proprietary driver), but not
+unconditionally: some driver models return the PIDs with no usable memory figure. That case is
+handled honestly here — the processes are still listed, and their memory is reported
+``UNSUPPORTED`` with a reason rather than ``0``. Showing zero would say "this process is using
+no GPU memory", which is false.
 """
 
 from __future__ import annotations
@@ -30,8 +31,8 @@ __all__ = ["NvmlAttributionProvider"]
 
 _log = logging.getLogger(__name__)
 
-_WDDM_REASON = (
-    "per-process GPU memory is not reported by this driver model (WDDM); "
+_NO_PER_PROCESS_MEMORY_REASON = (
+    "per-process GPU memory is not reported by this driver; "
     "the process is listed but its memory is unknown"
 )
 
@@ -93,7 +94,7 @@ class NvmlAttributionProvider:
             total = 0
             for entry in entries:
                 if entry.used_gpu_memory is None:
-                    memory = MetricValue.unsupported(_WDDM_REASON)
+                    memory = MetricValue.unsupported(_NO_PER_PROCESS_MEMORY_REASON)
                 else:
                     memory = MetricValue.available(entry.used_gpu_memory, sampled_at=now)
                     total += entry.used_gpu_memory

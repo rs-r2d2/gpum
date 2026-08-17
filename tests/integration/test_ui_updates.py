@@ -190,7 +190,7 @@ class TestProcessTable:
                 pid=1,
                 device_key="a",
                 name="unknown",
-                memory_used=MetricValue.unsupported("WDDM"),
+                memory_used=MetricValue.unsupported("not reported by this driver"),
             ),
             GpuProcess(
                 pid=2,

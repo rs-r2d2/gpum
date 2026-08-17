@@ -1,7 +1,7 @@
 """T051: the attribution contract suite (contracts/process-attribution.md, A-01..A-12).
 
 Parametrized over every registered provider. A fake provider models the shapes the real ones
-produce — including the NVIDIA/WDDM case where PIDs are known but their memory is not.
+produce — including the case where PIDs are known but their memory is not.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def _devices() -> list[GpuDevice]:
 
 class FakeAttributionProvider:
     """Models a realistic mix: a resolved process, a restricted one, an unresolved one, and
-    a device whose memory the driver model cannot report (the WDDM shape)."""
+    a device whose memory the driver cannot report."""
 
     source_name = "fake/attribution"
 
@@ -77,7 +77,7 @@ class FakeAttributionProvider:
                     GpuProcess(
                         pid=300,
                         device_key=key,
-                        memory_used=MetricValue.unsupported("not reported under WDDM"),
+                        memory_used=MetricValue.unsupported("not reported by this driver"),
                     )
                 )
                 totals[key] = 0

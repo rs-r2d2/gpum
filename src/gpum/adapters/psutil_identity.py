@@ -1,12 +1,12 @@
 """PID → identity via ``psutil``, shared by every platform that has it (contract A-05, A-06,
 A-10, A-12).
 
-**Why this is shared rather than copied** (feature 007): everything identity needs — name,
-executable, owner, start time — ``psutil`` supplies identically on Linux and Windows. The only
-genuinely platform-specific part is container membership, which is a Linux cgroup concept, so
-it is injected rather than branched on. Constitution Principle II prohibits forked
-implementations of the same feature per platform; two near-identical copies of the recycled-PID
-guard below is exactly what that rule exists to prevent.
+**Why this is a separate module rather than part of the Linux adapter**: everything identity
+needs — name, executable, owner, start time — ``psutil`` supplies without any OS knowledge. The
+only genuinely platform-specific part is container membership, a Linux cgroup concept, so it is
+injected rather than branched on. Linux is currently the only caller; keeping the split means a
+future platform reuses the recycled-PID guard below instead of growing a second copy of it,
+which is what Principle II's ban on per-platform forks exists to prevent.
 
 GPU memory never comes from here — only the identity layered onto a PID some GPU source already
 reported.

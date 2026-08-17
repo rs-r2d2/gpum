@@ -19,6 +19,11 @@ failing tests.
 stubs (Principle I protection, see plan.md). macOS is deferred — an open constitution violation
 recorded in plan.md § Complexity Tracking.
 
+> **Superseded 2026-08-17.** Windows and macOS are no longer targets and the constitution
+> violation is closed. The scope above is Linux + NVIDIA only. See
+> § Status revision — 2026-08-17 at the end of this file; task markers below are updated, this
+> paragraph is left as the original record.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -40,7 +45,7 @@ Single project: `src/gpum/`, `tests/` at repository root, per plan.md § Project
 - [X] T003 [P] Configure `ruff` (lint + format) in `pyproject.toml` with line length 100
 - [X] T004 [P] Configure `mypy` in `pyproject.toml` in strict mode for `src/gpum/core/` and `src/gpum/backends/base.py`
 - [X] T005 [P] Configure pytest in `pyproject.toml`: `QT_QPA_PLATFORM=offscreen` env, `hardware` marker registered and deselected by default via `addopts = "-m 'not hardware'"`
-- [X] T006 [P] Create `.github/workflows/ci.yml` running lint, typecheck, and the full suite on a Linux × Windows matrix against Python 3.11/3.12/3.13, with no GPU present
+- [X] T006 [P] Create `.github/workflows/ci.yml` running lint, typecheck, and the full suite against Python 3.11/3.12/3.13, with no GPU present. Originally a Linux × Windows matrix; narrowed to Linux on 2026-08-17 with the platform scope.
 - [X] T007 [P] Create `.gitignore` and a `README.md` stub stating the read-only, no-telemetry, no-elevation guarantees (FR-019, FR-021, FR-022)
 
 ---
@@ -100,7 +105,7 @@ on real NVIDIA hardware, start a CUDA workload, and watch used memory rise and f
 ### Tests for User Story 1 (write first, must fail)
 
 - [X] T032 [P] [US1] Write failing NVML mapping tests in `tests/unit/test_nvml_mapping.py` using recorded fixtures: `NVML_ERROR_NOT_SUPPORTED` → `UNSUPPORTED`, `NVML_ERROR_NO_PERMISSION` → `PERMISSION_DENIED`, `NVML_ERROR_DRIVER_NOT_LOADED` → `DRIVER_MISSING` (contract C-02, C-06)
-- [ ] T033 [P] [US1] Record NVML response fixtures, including failure modes, in `tests/fixtures/nvml/` so the NVIDIA backend is testable with no driver present (Principle IV)
+- [X] T033 [P] [US1] Record NVML response fixtures, including failure modes, in `tests/fixtures/nvml/` so the NVIDIA backend is testable with no driver present (Principle IV)
 - [X] T034 [P] [US1] Write failing UI tests in `tests/integration/test_ui_updates.py` for U-01 (no GUI slot exceeds 16 ms with 8 devices), U-04 (out-of-order snapshots discarded), and U-11 (an `UNSUPPORTED` metric never renders as `0` or blank)
 - [X] T035 [P] [US1] Write a failing hardware-marked test in `tests/integration/test_nvidia_hardware.py` (`@pytest.mark.hardware`) asserting real device enumeration and plausible memory figures
 
@@ -146,15 +151,15 @@ disappear within two intervals with a restricted process still counted in device
 ### Implementation for User Story 2
 
 - [X] T056 [P] [US2] Implement `psutil`-based batch identity resolution in `src/gpum/adapters/linux/identity.py`, mapping `AccessDenied` → `RESTRICTED` and `NoSuchProcess` → `UNRESOLVED`, returning an entry for every requested key (A-05, A-06, A-10)
-- [ ] T057 [P] [US2] Implement `psutil`-based batch identity resolution in `src/gpum/adapters/windows/identity.py` with the same guarantees
+- [~] T057 [P] [US2] ~~Implement `psutil`-based batch identity resolution in `src/gpum/adapters/windows/identity.py`~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0). Was implemented, then removed with the Windows adapter package. The shared lookup it introduced survives as `src/gpum/adapters/psutil_identity.py`.
 - [X] T058 [P] [US2] Implement container resolution in `src/gpum/adapters/linux/containers.py` reading only `/proc/<pid>/cgroup` — no Docker socket, no daemon, no elevation (A-12, research D-06)
 - [X] T059 [US2] Implement the NVML attribution provider in `src/gpum/backends/nvidia/attribution.py` using `nvmlDeviceGetComputeRunningProcesses_v3` and `nvmlDeviceGetGraphicsRunningProcesses_v3`
-- [ ] T060 [US2] Run spike S-02: confirm on Windows/WDDM hardware that per-process memory is unavailable, and capture the exact error or sentinel returned
-- [X] T061 [US2] Implement the S-02 finding in `src/gpum/backends/nvidia/attribution.py`: on WDDM, return PIDs with `memory_used` as `UNSUPPORTED` carrying a WDDM-specific reason — never `0` (A-07, research D-03)
+- [~] T060 [US2] ~~Run spike S-02 on Windows/WDDM hardware~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0). The nullable-memory handling it would have confirmed is retained and tested: a `None` figure becomes `UNSUPPORTED` with a reason, never `0`.
+- [X] T061 [US2] Implement the S-02 finding in `src/gpum/backends/nvidia/attribution.py`: where the driver reports no per-process memory, return PIDs with `memory_used` as `UNSUPPORTED` carrying a reason — never `0` (A-07, research D-03). The reason text was generalised when Windows was dropped; the behaviour is unchanged and still tested.
 - [X] T062 [US2] Register the NVML attribution provider with the NVIDIA backend in `src/gpum/core/registry.py`
-- [ ] T063 [US2] Run spike S-01: confirm the exact Windows PDH counter paths for `GPU Engine` and `GPU Process Memory`, whether instance names encode the PID, and whether they read without elevation
-- [ ] T064 [US2] Implement the Windows PDH attribution provider in `src/gpum/adapters/windows/pdh.py` from the S-01 findings, supplying vendor-neutral per-process GPU memory
-- [ ] T065 [US2] Register the PDH provider as the Windows platform attribution source in `src/gpum/core/registry.py`
+- [~] T063 [US2] ~~Run spike S-01: Windows PDH counter paths~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0).
+- [~] T064 [US2] ~~Implement the Windows PDH attribution provider~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0). Never written.
+- [~] T065 [US2] ~~Register the PDH provider as the Windows platform attribution source~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0).
 - [X] T066 [US2] Extend `src/gpum/core/merge.py` to attach identity and container information to attributed PIDs and emit `UNRESOLVED` entries for unidentifiable PIDs (FR-031)
 - [X] T067 [US2] Implement `ProcessTableModel` in `src/gpum/ui/process_model.py` as a `QAbstractTableModel` keyed on `(device_key, pid, started_at)` so rows update in place instead of rebuilding
 - [X] T068 [US2] Render `ProcessIdentity` states in `src/gpum/ui/process_model.py`: `RESTRICTED` shown as restricted, `UNRESOLVED` shown as unresolved, `CONTAINERIZED` showing the truncated container ID (FR-009, FR-030, FR-031)
@@ -224,7 +229,7 @@ restart, and confirm both persist.
 - [X] T091 [US4] Implement queued `set_interval` and `set_paused` slots in `src/gpum/ui/sampler_worker.py`, applying changes at the next cycle boundary and never mid-cycle (FR-012)
 - [X] T092 [US4] Recompute `DeviceHistory` capacity when the interval changes in `src/gpum/core/history.py` so the retention window stays constant and the memory bound holds (FR-024)
 - [X] T093 [US4] Implement stable multi-key sorting in `src/gpum/ui/process_model.py` with `(device_key, pid, started_at)` as tiebreaker so equal values never reshuffle between refreshes (FR-010)
-- [ ] T094 [US4] Implement `src/gpum/ui/settings_dialog.py` for refresh interval, history window, and hidden-window throttling
+- [X] T094 [US4] Implement `src/gpum/ui/settings_dialog.py` for refresh interval, history window, and hidden-window throttling
 - [X] T095 [US4] Implement pause/resume control in `src/gpum/ui/main_window.py` (FR-012)
 - [X] T096 [US4] Implement visibility-based throttling in `src/gpum/ui/main_window.py`, signalling the worker on hide, minimize, and deactivate (FR-015)
 - [X] T097 [US4] Persist and restore window geometry and sort state in `src/gpum/ui/main_window.py` (FR-023)
@@ -244,10 +249,10 @@ restart, and confirm both persist.
 - [X] T104 [P] Write `docs/adding-a-vendor.md` from quickstart.md § Adding a vendor backend later
 - [X] T105 [P] Expand `README.md` with install (`pip install gpum[nvidia]`), run, and the supported-platform matrix
 - [X] T106 [P] Verify third-party licence compatibility and record it in `docs/licenses.md` (constitution tech constraints)
-- [ ] T107 Confirm packaging installs and launches on Linux and Windows from wheels with no compiler toolchain present (constitution tech constraints)
+- [X] T107 Confirm packaging installs and launches **on Linux** from wheels with no compiler toolchain present (constitution tech constraints). Scope narrowed with the Windows target; the Linux half was verified.
 - [X] T108 Run the full quickstart.md validation V-1 through V-6 on Linux and record results
-- [ ] T109 Run the full quickstart.md validation V-1 through V-8 on Windows and record results, including the expected WDDM degradation
-- [ ] T110 Resolve the open Principle II violation: either amend the constitution to permit phased platform rollout, or record the deviation formally per plan.md § Complexity Tracking
+- [~] T109 ~~Run quickstart V-1 through V-8 on Windows~~ **DROPPED — Windows is no longer a target** (constitution 2.0.0). V-1 through V-6 on Linux are recorded under T108.
+- [X] T110 Resolve the open Principle II violation. **Resolved 2026-08-17 by constitution amendment 2.0.0**: Principle II was narrowed from a three-platform mandate to Linux only, so the macOS deferral is no longer a deviation — there is nothing left to deviate from. The architecture half of the principle (adapters, no OS conditionals in feature code, visible degradation) was retained deliberately.
 
 ---
 
@@ -365,6 +370,55 @@ The full suite is **457 passed, 3 skipped, 7 hardware-deselected**, lint clean.
 | T094 | A separate settings dialog. The toolbar covers interval, sort, pause, and refresh; a dialog would add surface without capability. Deferred deliberately. |
 | T107, T109 | Cross-platform packaging and the Windows quickstart run. Linux verified; Windows unverified. |
 | T110 | Governance: the open Principle II (macOS) deviation. Requires a decision, not code. |
+
+---
+
+## Status revision — 2026-08-17: Windows and macOS dropped as targets
+
+The table above is superseded where it conflicts with this section. Windows and macOS are no
+longer targets (constitution amended to **2.0.0**), and an audit of the tree found four
+checkboxes that were stale rather than outstanding. **104 of 110 tasks are now complete, 5 are
+dropped, and 1 remains genuinely outstanding.**
+
+### Checkboxes that were wrong — the work was already done
+
+| Task | Found in the tree |
+|---|---|
+| T033 | `tests/fixtures/nvml/rtx5060ti-580.159.03.json` exists, recorded from real hardware (driver 580.159.03) and including an `error_responses` section with failure modes. Consumed by `tests/unit/test_nvml_fixtures.py`. The 2026-08-16 note predates the hardware verification in feature 002. |
+| T094 | `src/gpum/ui/settings_dialog.py` exists and is wired at `src/gpum/ui/app.py:86`, with coverage in `tests/integration/test_settings_dialog.py`. The "deferred deliberately" reasoning was reversed and the note was never updated. |
+| T107 | The Linux half was verified; only the Windows half was not, and it is now out of scope. |
+| T057 | Was implemented in the Windows adapter, then deleted with it — see below. |
+
+### Dropped, not deferred
+
+T057, T060, T063, T064, T065 and T109 are dropped. A deferred task implies a commitment; there
+is none. The Windows adapter package (`src/gpum/adapters/windows/`) and its tests were **deleted**
+rather than left in place, because partially-built platform code reads as a promise of support —
+which is the same class of fault as rendering an unmeasured metric as zero.
+
+Two things deliberately survived the deletion:
+
+- **`src/gpum/adapters/psutil_identity.py`** — the OS-agnostic identity lookup that T057
+  introduced. It is what the Linux provider now uses, and it needed no Windows to justify it.
+- **The nullable per-process memory path.** `NvmlProcessInfo.used_gpu_memory` is still
+  `int | None`, and a `None` still becomes `UNSUPPORTED` with a reason. Only the reason *text*
+  changed, from naming WDDM to naming the driver generically. This was the honest-degradation
+  guarantee, not Windows scaffolding.
+
+### Still outstanding
+
+| Task | Reason |
+|---|---|
+| T050 | Spike S-03 needs multi-GPU hardware. Note that feature 002 has since measured per-device cost on single-GPU hardware (0.119 ms p99, later 3.832 ms p99 with power) and set the timeout from it, so the "500 ms placeholder" description is itself out of date — but the multi-GPU measurement was never taken. |
+| T085 | Split verdict. The **implementation half is done**: handle rebuilding after a driver restart is at `src/gpum/backends/nvidia/backend.py:159`, tested in `tests/unit/test_driver_recovery.py`. Only the empirical spike — restarting a real driver under a running process — is outstanding, and it needs hardware. |
+
+### Resolved
+
+**T110 is closed.** The Principle II violation is gone because the principle no longer makes the
+claim that was being violated. This is worth stating plainly rather than dressing up: the
+three-platform mandate was never met, from feature 001 onward, and the fix chosen was to narrow
+the promise to what is actually delivered rather than to keep carrying a deviation. The
+capability matrix is a single column now, and every cell in it is a measurement.
 
 ### Design corrections made during implementation
 

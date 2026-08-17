@@ -48,37 +48,17 @@ invisible on the build host.
 
 `packaging/verify-appdir.sh` makes both checks build-blocking rather than advisory.
 
-## Windows executable and installer
+## Other platforms
 
-**Status: in progress (feature 007).** The application-side work is done and the build tooling
-is not. What exists today:
+There are none. GPUM targets Linux only (constitution 2.0.0), and the AppImage above is the
+only bundle. A Windows executable and installer were specced and partly started, then dropped
+along with the Windows target — `packaging/gpum.spec` no longer carries a Windows exclusion
+table, and the Qt Installer Framework question that blocked it is moot.
 
-- `packaging/gpum.spec` builds on Windows as well as Linux. Its exclusion tables are selected
-  per platform, because the same Qt libraries are `libQt6Quick.so.6` on Linux and `Qt6Quick.dll`
-  on Windows, and destination paths use different separators. A Linux-shaped table looks
-  configured and excludes nothing on Windows.
-- The forbidden-driver-library rule now covers `nvml`, `nvcuda`, `nvapi`, `nvfatbinaryloader`,
-  `nvrtc` and `cudart`. The reason is identical to Linux: NVML is version-locked to the host's
-  driver, and `nvidia-ml-py` resolves `%WINDIR%\System32\nvml.dll` by absolute path at call
-  time, so excluding it is both sufficient and correct.
-
-What does **not** exist yet: `packaging/windows/build-windows.ps1`, the installer
-configuration, and `packaging/windows/verify-dist.ps1`. See
-`specs/007-windows-installer/tasks.md`.
-
-### The installer framework is not yet chosen
-
-The requester asked for the Qt Installer Framework, and it meets the functional constraints
-(per-user install without elevation, offline, an uninstall entry). **It is not yet approved**,
-because it is distributed under GPL/LGPL terms and its maintenance tool ships *inside* the
-artifact users receive — making it a distributed component subject to this project's licensing
-rule, not merely a build tool.
-
-That decision is blocked on a prior contradiction: this repository declares two different
-licences for itself. See `docs/licenses.md`. Until that is settled, no installer framework can
-be assessed for compatibility, because there is nothing definite to be compatible with. Inno
-Setup is the recorded fallback (research D-01) if the terms do not work out; no design work
-depends on which is chosen.
+If a platform is ever added back, the spec's exclusion tables must be extended, not reused: the
+same Qt libraries are `libQt6Quick.so.6` on Linux and `Qt6Quick.dll` elsewhere, so a borrowed
+Linux table looks configured and excludes nothing — which shows up only as a size regression in
+the built artifact.
 
 ## Status
 

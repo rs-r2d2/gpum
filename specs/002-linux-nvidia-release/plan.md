@@ -83,7 +83,7 @@ machine: Ubuntu 24.04, GNOME/X11, RTX 5060 Ti, driver 580.159.03.
 | **V. Read-Only, Least Privilege** | ❌ VIOLATION (accepted) | Recorded in Complexity Tracking below. Narrow, user-initiated, reversible, off by default. |
 
 **Gate result**: proceeds with one recorded violation (Principle V, autostart). Principle II's
-macOS deferral from feature 001 remains open and unchanged — this feature does not worsen it, but
+macOS deferral from feature 001 remains open and unchanged *(2026-08-17: since closed by constitution amendment 2.0.0)* — this feature does not worsen it, but
 does not resolve it either.
 
 ## Project Structure

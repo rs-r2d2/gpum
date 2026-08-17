@@ -122,31 +122,31 @@ def test_linux_adapters_do_not_import_ui(path: pathlib.Path) -> None:
         assert not name.startswith("gpum.ui"), f"{path.name} imports {name}"
 
 
-# --- feature 007 additions -------------------------------------------------
+# --- the adapter boundary itself -------------------------------------------
 
 FEATURE_CODE = CORE + BACKENDS + UI
 
 
 @pytest.mark.parametrize("path", FEATURE_CODE, ids=_ids(FEATURE_CODE))
-def test_t003_feature_code_does_not_import_a_platform_adapter(path: pathlib.Path) -> None:
-    """Principle II, in the shape the existing rules missed (feature 007, D-07).
+def test_feature_code_does_not_import_a_platform_adapter(path: pathlib.Path) -> None:
+    """Principle II, in the shape the existing rules missed (research D-07).
 
     ``test_no_os_branching_outside_adapters`` looks for ``sys.platform`` conditionals. This one
     catches the other way to bind feature code to one OS: importing the platform module by name,
     unconditionally, with no branch to find.
 
     That is not hypothetical. ``ui/app.py`` did exactly this with
-    ``from gpum.adapters.linux import autostart``, and on Windows it reported the autostart
-    location as ``C:\\Users\\<user>\\.config\\autostart\\gpum.desktop``, wrote a file nothing on
-    Windows reads, and told the user the setting was enabled. A capability claimed but absent is
-    the same fault as a metric rendered as zero when it was never measured.
+    ``from gpum.adapters.linux import autostart``, so off Linux it reported a
+    ``~/.config/autostart/gpum.desktop`` location, wrote a file nothing there reads, and told the
+    user the setting was enabled. A capability claimed but absent is the same fault as a metric
+    rendered as zero when it was never measured.
 
-    Feature code imports ``gpum.adapters``; the switch inside it picks the implementation.
+    **This rule outlives the Linux-only scope.** Linux is now the only supported platform, which
+    makes the direct import *look* harmless — it is not. The null fallbacks are what keep GPUM
+    truthful when it is run somewhere unsupported, and a by-name import routes straight past
+    them. Feature code imports ``gpum.adapters``; the switch inside it picks the implementation.
     """
     for name in _imports(path):
         assert not name.startswith("gpum.adapters.linux"), (
-            f"{path.name} imports {name}; import gpum.adapters and let it choose"
-        )
-        assert not name.startswith("gpum.adapters.windows"), (
             f"{path.name} imports {name}; import gpum.adapters and let it choose"
         )

@@ -74,7 +74,7 @@ class TestMetricValueInvariant:
         assert m.sampled_at == then
 
     def test_unsupported_helper_produces_no_value(self) -> None:
-        m = MetricValue.unsupported("not reported under WDDM")
+        m = MetricValue.unsupported("not reported by this driver")
         assert m.value is None
         assert m.reason
 

@@ -1,8 +1,8 @@
 """Preference persistence via QSettings (FR-023, research D-10).
 
-QSettings picks the platform-appropriate location itself — the registry on Windows, a config
-file on Linux — which is one less thing to fork per platform. The `Preferences` model it reads
-and writes stays Qt-free in `core`.
+QSettings picks the platform-appropriate location itself — a config file under Linux — which is
+one less thing that would ever need forking per platform. The `Preferences` model it reads and
+writes stays Qt-free in `core`.
 """
 
 from __future__ import annotations

@@ -3,6 +3,11 @@
 Constitution Principle II requires this table to be updated in the same change that alters
 support. It is the auditable record of what actually works where.
 
+**Platform: Linux only.** The Windows and macOS columns were removed in the same change that
+dropped both as targets (constitution 2.0.0). They are not hidden pending work — no claim is
+made about either. This is why the table is now a single column: it records measurements, and
+Linux is the only platform GPUM is measured on.
+
 **Legend**: ✅ works · ⚠️ degraded, reported honestly · ❌ not implemented · — not applicable
 
 ## Interface
@@ -43,47 +48,56 @@ separates `reserved`. Regression test: `tests/unit/test_memory_reserved.py`.
 
 ## Device metrics
 
-| Vendor | Linux | Windows | macOS |
-|---|---|---|---|
-| NVIDIA — power draw | ✅ **verified vs nvidia-smi** | ✅ NVML (unverified) | ❌ deferred |
-| NVIDIA — power limit | ✅ **verified, exact match** | ✅ NVML (unverified) | ❌ deferred |
-| NVIDIA — session energy | ✅ **verified** | ✅ NVML (unverified) | ❌ deferred |
-| NVIDIA — limiting reason | ✅ **verified** | ✅ NVML (unverified) | ❌ deferred |
-| Any vendor — per-process power | ❌ **not possible** — no interface exposes it | ❌ not possible | ❌ not possible |
-| Any vendor — physical presence detection | ✅ DRM sysfs (FR-015) | ❌ not implemented | ❌ deferred |
-| NVIDIA — memory total/used | ✅ **verified vs nvidia-smi** | ✅ NVML (unverified) | ❌ deferred |
-| NVIDIA — utilization | ✅ **verified** | ✅ NVML (unverified) | ❌ deferred |
-| NVIDIA — MIG devices | ⚠️ reported unsupported (FR-028) | ⚠️ reported unsupported | ❌ deferred |
-| AMD | ❌ stub | ❌ stub | ❌ deferred |
-| Intel | ❌ stub | ❌ stub | ❌ deferred |
+| Vendor | Linux |
+|---|---|
+| NVIDIA — power draw | ✅ **verified vs nvidia-smi** |
+| NVIDIA — power limit | ✅ **verified, exact match** |
+| NVIDIA — session energy | ✅ **verified** |
+| NVIDIA — limiting reason | ✅ **verified** |
+| Any vendor — per-process power | ❌ **not possible** — no interface exposes it |
+| Any vendor — physical presence detection | ✅ DRM sysfs (FR-015) |
+| NVIDIA — memory total/used | ✅ **verified vs nvidia-smi** |
+| NVIDIA — utilization | ✅ **verified** |
+| NVIDIA — MIG devices | ⚠️ reported unsupported (FR-028) |
+| AMD | ❌ stub |
+| Intel | ❌ stub |
 
 ## Per-process attribution
 
-| Vendor | Linux | Windows | macOS |
-|---|---|---|---|
-| NVIDIA — process list | ✅ **verified, 100% match** | ⚠️ NVML lists PIDs | ❌ deferred |
-| NVIDIA — per-process memory | ✅ **verified** | ⚠️ **unavailable under WDDM** — reported as unsupported with a reason, never 0 (research D-03) | ❌ deferred |
-| NVIDIA — per-process utilization | ❌ not reported by NVML | ❌ not reported by NVML | ❌ deferred |
-| Any vendor — OS-supplied fallback | ❌ DRM fdinfo not implemented | ❌ PDH counters not implemented (spikes S-01/S-02) | ❌ deferred |
+| Vendor | Linux |
+|---|---|
+| NVIDIA — process list | ✅ **verified, 100% match** |
+| NVIDIA — per-process memory | ✅ **verified** |
+| NVIDIA — per-process utilization | ❌ not reported by NVML |
+| Any vendor — OS-supplied fallback | ❌ DRM fdinfo not implemented |
+
+Per-process memory is still handled as nullable end to end: where a driver returns a PID with no
+memory figure, it is reported `UNSUPPORTED` with a reason rather than `0`. That path is tested
+and reachable — it is not Windows-specific residue.
 
 ## Process identity
 
-| Capability | Linux | Windows | macOS |
-|---|---|---|---|
-| Name, executable, owner | ✅ psutil | ✅ psutil | ❌ deferred |
-| Inaccessible process → RESTRICTED | ✅ | ✅ | ❌ deferred |
-| Container ID | ✅ `/proc/<pid>/cgroup` | ⚠️ no equivalent; shown unresolved | ❌ deferred |
+| Capability | Linux |
+|---|---|
+| Name, executable, owner | ✅ psutil |
+| Inaccessible process → RESTRICTED | ✅ |
+| Container ID | ✅ `/proc/<pid>/cgroup` |
 
 ## Known gaps in this release
 
-1. **Windows per-process memory.** NVML cannot supply it under WDDM and the PDH adapter is not
-   implemented. Windows shows the process list with memory marked unsupported. This is correct
-   behaviour under FR-017, not a bug — but it is the largest functional gap.
-2. **AMD and Intel are stubs.** They exist to keep the backend registry plural (Principle I) and
-   report `NOT_IMPLEMENTED` in the discovery panel.
-3. **AppImage bundle: built and verified.** 50 MB, launches on Ubuntu 22.04 and on the
+1. **AMD and Intel are stubs.** They exist to keep the backend registry plural (Principle I) and
+   report `NOT_IMPLEMENTED` in the discovery panel. This is now the largest functional gap.
+2. **AppImage bundle: built and verified.** 50 MB, launches on Ubuntu 22.04 and on the
    development machine's GNOME/X11 session, reports the same version as the pip install.
    Container GPU attribution could not be verified here — `nvidia-container-toolkit` is not
    installed on the reference machine.
-4. **macOS is deferred** (FR-025). This remains an open Principle II deviation — see
-   `specs/001-gpu-usage-monitor/plan.md` § Complexity Tracking.
+3. **No DRM fdinfo adapter.** A vendor-neutral, OS-supplied attribution source on Linux is not
+   implemented. It is not needed for NVIDIA, which supplies its own, but it is what AMD and Intel
+   would need before their stubs could report processes.
+
+## Not gaps: platforms
+
+Windows and macOS are **not supported and not planned**. They are absent from this document
+rather than listed as deferred, because a deferred row is a commitment and there is none. The
+adapter boundary that made them cheap to add still stands (`src/gpum/adapters/`), so this is a
+scope decision, not a one-way door.

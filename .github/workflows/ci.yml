@@ -7,7 +7,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # Linux only. GPUM targets Linux and nothing else (constitution Principle II, amended
+        # 2.0.0) — a Windows or macOS leg here would gate merges on a platform the project
+        # makes no claim about, and green runs on it would read as support that is not offered.
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:

@@ -8,7 +8,18 @@ version = "0.1.0"
 description = "Live GPU memory and process monitor across NVIDIA, AMD and Intel"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "LGPL-3.0-or-later" }
+# MIT, matching LICENSE. See docs/licenses.md for why this file used to disagree with it and
+# what the MIT choice obliges when PySide6 (LGPL-3.0) is bundled.
+license = { text = "MIT" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: X11 Applications :: Qt",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Monitoring",
+]
 
 dependencies = [
     "PySide6>=6.6",

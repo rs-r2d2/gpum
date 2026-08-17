@@ -9,17 +9,17 @@ QtWidgets only. Without trimming, the download is unusable.
 **Never bundled — correctness, not size**: NVIDIA driver libraries. NVML is version-locked to
 the host's kernel module. A copy taken from the build machine either fails to initialise or,
 worse, misreports against a different host driver — wrong numbers presented as measurements on
-someone else's machine, silently. `nvidia-ml-py` is pure Python over ctypes and resolves the
-library at call time — `libnvidia-ml.so.1` by name on Linux, `System32\nvml.dll` by absolute
-path on Windows — so excluding it is sufficient and correct on both.
+someone else's machine, silently. `nvidia-ml-py` is pure Python over ctypes and resolves
+`libnvidia-ml.so.1` by name at call time, so excluding it is sufficient and correct.
 
-**One spec, two platforms** (feature 007). The tables below are selected per platform because
-the same libraries carry different names (`libQt6Quick.so.6` vs `Qt6Quick.dll`) and paths use
-different separators. A single Linux-shaped table would appear configured and silently exclude
-nothing on Windows.
+**Linux only.** The tables below are Linux-shaped on purpose: GPUM targets Linux and nothing
+else (constitution Principle II). This spec previously carried a parallel Windows table selected
+on `sys.platform`; it was removed with the Windows target. Anyone adding a platform back must
+add its table rather than reuse this one — the same Qt libraries are `libQt6Quick.so.6` here and
+`Qt6Quick.dll` elsewhere, so a borrowed table looks configured and excludes nothing.
 
-`packaging/verify-appdir.sh` (Linux) and `packaging/windows/verify-dist.ps1` (Windows) enforce
-these as build-blocking checks, because none of these failures is visible on the build host.
+`packaging/verify-appdir.sh` enforces these as build-blocking checks, because none of these
+failures is visible on the build host.
 """
 
 import sys
@@ -44,31 +44,17 @@ EXCLUDED_MODULES = [
     "tkinter", "unittest", "pydoc", "doctest", "pytest", "numpy", "PIL",
 ]
 
-# Correctness: driver components must come from the host, never from this build machine.
-#
-# Both platforms, because the reason is the same on both: the management library is
-# version-locked to the host's kernel driver, and a copy taken from the build machine either
-# fails to initialise or misreports against a different host driver — wrong numbers presented as
-# measurements, silently. On Windows `nvidia-ml-py` loads `%WINDIR%\System32\nvml.dll` (DCH) or
-# `%ProgramFiles%\NVIDIA Corporation\NVSMI\nvml.dll` by absolute path at call time, so excluding
-# these is both sufficient and correct (feature 007, research D-03).
-FORBIDDEN_BINARY_PREFIXES_LINUX = (
-    "libnvidia-", "libcuda", "libGLX_nvidia", "libnvcuvid", "libnvoptix", "libglvnd",
-)
-FORBIDDEN_BINARY_PREFIXES_WINDOWS = (
-    "nvml", "nvcuda", "nvapi", "nvfatbinaryloader", "nvrtc", "cudart",
-)
+# Correctness: driver components must come from the host, never from this build machine. The
+# management library is version-locked to the host's kernel driver, and a copy taken from the
+# build machine either fails to initialise or misreports against a different host driver —
+# wrong numbers presented as measurements, silently (research D-03).
 FORBIDDEN_BINARY_PREFIXES = (
-    FORBIDDEN_BINARY_PREFIXES_WINDOWS if sys.platform.startswith("win")
-    else FORBIDDEN_BINARY_PREFIXES_LINUX
+    "libnvidia-", "libcuda", "libGLX_nvidia", "libnvcuvid", "libnvoptix", "libglvnd",
 )
 
 # Size: Qt shared objects pulled in transitively. Excluding the Python module is not enough —
 # PySide6's hooks collect the libraries as dependencies regardless, which is how a 400 MB Qt
 # install leaks back into a bundle that only needs three modules.
-#
-# Named per platform: the same libraries are `libQt6Quick.so.6` on Linux and `Qt6Quick.dll` on
-# Windows, so a single table silently excludes nothing on the other platform (feature 007).
 _UNUSED_QT_MODULES = (
     "Quick", "Qml", "WebEngine", "WebChannel", "WebSockets",
     "3D", "Multimedia", "Charts", "DataVisualization",
@@ -76,9 +62,7 @@ _UNUSED_QT_MODULES = (
     "Bluetooth", "Nfc", "Positioning", "Location",
     "SerialPort", "Quick3D", "ShaderTools", "Spatial",
 )
-UNUSED_QT_LIBRARY_PREFIXES = tuple(
-    (f"Qt6{m}" if sys.platform.startswith("win") else f"libQt6{m}") for m in _UNUSED_QT_MODULES
-)
+UNUSED_QT_LIBRARY_PREFIXES = tuple(f"libQt6{m}" for m in _UNUSED_QT_MODULES)
 
 # Directories of Qt plugins GPUM never loads.
 UNUSED_PLUGIN_DIRS = (
@@ -90,9 +74,9 @@ UNUSED_PLUGIN_DIRS = (
 def _as_posix(dest):
     """Normalise a destination path for substring matching.
 
-    PyInstaller emits native separators, so a table written with ``/`` matches nothing on
-    Windows — the exclusion would appear to be configured and silently do nothing, which is the
-    worst of the three outcomes (feature 007).
+    A no-op on Linux, kept because the tables below are written with ``/`` and silently matching
+    nothing is the worst failure mode available here: the exclusion would look configured and do
+    nothing, and the size regression only shows up in the built artifact.
     """
     return str(dest).replace("\\", "/")
 

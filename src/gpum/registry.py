@@ -94,8 +94,9 @@ def select_attribution_provider(
     """Pick an attribution source, per contracts/process-attribution.md.
 
     Order: a backend's own companion provider, then the platform adapter, then nothing.
-    Returning ``None`` is a supported, tested outcome — it is what NVIDIA-on-Windows looks
-    like before the PDH adapter lands, and the tool stays fully useful for device metrics.
+    Returning ``None`` is a supported, tested outcome — it is what a vendor with no attribution
+    source looks like on a platform with no OS-level fallback implemented, and the tool stays
+    fully useful for device metrics.
     """
     for backend in backends:
         provider = _companion_provider(backend)

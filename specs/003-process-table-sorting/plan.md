@@ -70,7 +70,7 @@ which processes are shown (FR-022, FR-023)
 | **V. Read-Only, Least Privilege** | ✅ PASS | The per-device map lives with existing preferences; nothing new is written outside them. |
 
 **Gate result**: passes with no violations. The project's two open governance items (feature
-002's autostart, feature 001's macOS deferral) are untouched by this work.
+002's autostart, feature 001's macOS deferral) are untouched by this work. *(2026-08-17: the macOS item has since been closed by constitution amendment 2.0.0; the Principle V autostart item remains open.)*
 
 ## Project Structure
 

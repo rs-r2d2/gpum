@@ -75,8 +75,8 @@ class TestProcessCapture:
             )
 
     def test_no_process_memory_is_zero_when_present(self, capture: dict) -> None:
-        """A real GPU process holding literally zero bytes would be suspicious; the WDDM case
-        reports None, not 0, which is the distinction SC-007 depends on."""
+        """A real GPU process holding literally zero bytes would be suspicious; a driver that
+        cannot report the figure gives None, not 0 — the distinction SC-007 depends on."""
         for device in capture["devices"]:
             for process in device["processes"]:
                 if process.get("usedGpuMemory") is not None:

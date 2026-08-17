@@ -3,8 +3,8 @@
 ``psutil`` supplies name, executable, and owner; GPU memory never comes from here — only the
 identity layered onto a PID some GPU source already reported.
 
-The lookup itself lives in `gpum.adapters.psutil_identity`, shared with Windows. What is Linux
-about identity is container membership, which is supplied here as the resolver.
+The lookup itself lives in `gpum.adapters.psutil_identity`, which needs no OS knowledge. What is
+Linux about identity is container membership, which is supplied here as the resolver.
 """
 
 from __future__ import annotations

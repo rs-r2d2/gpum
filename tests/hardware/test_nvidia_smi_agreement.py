@@ -133,8 +133,8 @@ class TestProcessAgreement:
         assert named, "no GPU process could be identified"
 
     def test_process_memory_is_measured_on_linux(self, engine: SamplingEngine) -> None:
-        """NVML supplies per-process memory on Linux; on Windows/WDDM it does not, which is
-        reported honestly rather than as zero."""
+        """NVML supplies per-process memory on the supported target. Where a driver does not, it
+        is reported honestly rather than as zero."""
         snapshot = engine.sample()
         if not snapshot.processes:
             pytest.skip("no GPU processes running")
