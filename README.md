@@ -5,6 +5,36 @@ every second without ever blocking its own interface.
 
 **Read-only. No elevation required. Nothing leaves your machine.**
 
+![GPUM monitoring an RTX 5060 Ti under load](docs/media/gpum-screenshot.png)
+
+*A real capture, not a mockup: a CUDA kernel was started and stopped twice while the window
+sampled, which is the rise and fall visible in the activity graph.*
+
+## Features
+
+**Per device**
+
+- **Memory used against total**, as a bar and as a trend graph scaled to the device's capacity.
+- **GPU compute activity** — the share of *time* the GPU was busy, on its own bar and its own
+  trend graph. Not a fraction of cores: one small kernel can hold it at 100%, and the tooltip
+  says so, because "utilization" is the number people most often read as something it isn't.
+- **Memory interface activity** — how busy the path to memory was, which moves independently of
+  both compute activity and memory occupancy. Labelled by what it describes so it cannot be
+  confused with the memory figure a few lines above.
+- **Power draw against the enforced limit**, plus energy accumulated this session.
+- **The processes using the GPU**: name, PID, owner, and per-process GPU memory, sortable.
+
+**Trend graphs** are fixed to a 0–100 scale for percentages, so an idle GPU's 0–3% noise stays
+at the bottom instead of being stretched to full height by auto-scaling — and two GPUs stay
+comparable. An unreadable stretch is drawn as a **break in the line**, never a drop to zero.
+
+**Across the window**
+
+- Adjustable refresh interval, pause, and refresh-now.
+- Multiple GPUs, each in its own panel.
+- Suspend and resume leave a gap in history rather than a fabricated straight line.
+- Optional tray icon and autostart.
+
 ## Install
 
 Two ways, whichever suits you.
