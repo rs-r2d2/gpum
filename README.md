@@ -7,8 +7,9 @@ every second without ever blocking its own interface.
 
 ![GPUM monitoring an RTX 5060 Ti under load](docs/media/gpum-screenshot.png)
 
-*A real capture, not a mockup: a CUDA kernel was started and stopped twice while the window
-sampled, which is the rise and fall visible in the activity graph.*
+*A real capture, not a mockup: a CUDA kernel was started, stopped, and started again while the
+window sampled — that is the plateau, dip, and second plateau in the activity graph, with the
+kernel (`spin`) still running and holding compute at 100% at the moment of capture.*
 
 ## Features
 
@@ -26,7 +27,11 @@ sampled, which is the rise and fall visible in the activity graph.*
 
 **Trend graphs** are fixed to a 0–100 scale for percentages, so an idle GPU's 0–3% noise stays
 at the bottom instead of being stretched to full height by auto-scaling — and two GPUs stay
-comparable. An unreadable stretch is drawn as a **break in the line**, never a drop to zero.
+comparable. An unreadable stretch is drawn as a **break in the line**, never a drop to zero. Each
+graph states its own ceiling and current value, so the two are never mistaken for the same chart:
+memory is scaled to the card's capacity, activity to a flat 100%. Line and label colours are
+checked against the background they land on and corrected if they fall short, in light themes and
+dark ones alike.
 
 **Across the window**
 
@@ -35,21 +40,50 @@ comparable. An unreadable stretch is drawn as a **break in the line**, never a d
 - Suspend and resume leave a gap in history rather than a fabricated straight line.
 - Optional tray icon and autostart.
 
-## Install
+## Download and run
 
-Two ways, whichever suits you.
+One file, 50 MB, carrying its own Python and Qt. No install step, no Python on your machine, no
+compiler, no root.
 
-**Self-contained download** — no Python needed:
+**1. Download it.** Grab `GPUM-0.1.0-x86_64.AppImage` from the
+[releases page](https://github.com/rs-r2d2/gpum/releases), or from a shell:
+
+```bash
+curl -L -O https://github.com/rs-r2d2/gpum/releases/download/v0.1.0-alpha.2/GPUM-0.1.0-x86_64.AppImage
+```
+
+Note the explicit version tag. Every release so far is marked *pre-release*, and GitHub's
+`/releases/latest/` redirect deliberately skips pre-releases — so a `latest` URL returns **404**
+here rather than the newest build. Check the releases page for the current tag.
+
+**2. Make it executable.**
 
 ```bash
 chmod +x GPUM-0.1.0-x86_64.AppImage
+```
+
+**This step is required, not a formality.** A file that arrives over HTTP has its execute bit
+cleared, because a browser or `curl` has no way to know you intend to *run* what you just
+fetched — so the kernel refuses to launch it until you say so. Skip this and the file is inert:
+the shell answers `bash: ./GPUM-0.1.0-x86_64.AppImage: Permission denied`, and double-clicking it
+in a file manager either opens an archive viewer or does nothing at all. Neither failure mentions
+permissions, which is why this trips people up.
+
+**3. Run it.**
+
+```bash
 ./GPUM-0.1.0-x86_64.AppImage
 ```
 
-50 MB, carries its own Python and Qt, runs on Ubuntu 22.04 and newer. The only prerequisite is
-your NVIDIA driver.
+It takes the same flags as the packaged command, so `./GPUM-0.1.0-x86_64.AppImage --backend fake`
+works if you want to look around without a GPU.
 
-**Python package**:
+**What it needs from your machine**: 64-bit x86 Linux, glibc 2.35 or newer (Ubuntu 22.04 and up),
+and your NVIDIA driver already installed. The bundle deliberately does **not** carry NVIDIA's
+libraries — those are version-locked to your running kernel module, so a bundled copy would
+either fail to initialise or, worse, report a build machine's numbers as if they were yours.
+
+## Install as a Python package
 
 ```bash
 pip install -e ".[nvidia]"        # recommended
@@ -59,8 +93,6 @@ gpum --install-desktop-entry      # optional: add it to your application menu
 
 Python 3.11+. No compiler needed. Both forms share the same settings file, so you can switch
 between them freely.
-
-## Run
 
 ```bash
 gpum                                        # or: python -m gpum
@@ -81,10 +113,13 @@ python -m gpum --list-scenarios             # what the fake backend can simulate
 
 ## Support
 
-See [docs/capability-matrix.md](docs/capability-matrix.md) for exactly what works on which
-vendor and platform. In short: **this release covers NVIDIA on Linux and Windows**, with
-per-process memory unavailable on Windows under the WDDM driver model (a driver limitation,
-reported honestly). AMD and Intel are registered stubs. macOS is deferred.
+See [docs/capability-matrix.md](docs/capability-matrix.md) for exactly what works. In short:
+**Linux only, NVIDIA only.** AMD and Intel are registered stubs that report themselves as
+unimplemented rather than pretending.
+
+Windows and macOS are not supported and not planned. GPUM is vendor-agnostic by design but
+single-platform by scope — the backend abstraction is real and load-bearing, the platform
+ambition was dropped (constitution 2.0.0).
 
 ## Development
 
