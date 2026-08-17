@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from gpum.core.history import DeviceHistory
 from gpum.core.models import Availability, GpuDevice, Snapshot
+from gpum.core.units import format_bytes
 from gpum.ui import availability as av
 from gpum.ui.process_model import ProcessTableModel
 from gpum.ui.sparkline import Sparkline
@@ -100,7 +101,9 @@ class DevicePanel(QFrame):
         self._compute_label, self._compute_bar = self._metered_row(layout)
         self._mem_activity_label, self._mem_activity_bar = self._metered_row(layout)
 
-        self._sparkline = Sparkline(label="Memory used")
+        # Each graph formats its own readouts, because only the caller knows the unit: this one
+        # is bytes scaled to installed memory, the next is percent on a fixed ceiling.
+        self._sparkline = Sparkline(label="Memory used", value_format=format_bytes)
         layout.addWidget(self._sparkline)
 
         # A second, separate graph (FR-018) on a fixed 0-100 scale (FR-020), so an idle GPU
@@ -108,7 +111,8 @@ class DevicePanel(QFrame):
         self._utilization_spark = Sparkline(
             label="GPU activity (% of time busy)",
             fixed_maximum=100.0,
-            colour=QColor(240, 160, 72),
+            colour=QColor(191, 87, 0),
+            value_format=lambda value: f"{value:.0f}%",
         )
         layout.addWidget(self._utilization_spark)
 
