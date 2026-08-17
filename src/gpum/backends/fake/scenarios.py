@@ -23,6 +23,11 @@ class DeviceSpec:
     memory_total: int = 8 * 1024**3
     memory_used: int = 2 * 1024**3
     utilization: int | None = 35
+    #: Memory-*interface* activity — how busy the path to memory was, not how full it is.
+    #: ``None`` models a device that cannot report it, which is a different shape from a
+    #: device that cannot report compute utilization: FR-023 requires either one to be
+    #: absent while the other is still shown.
+    memory_utilization: int | None = 18
     supported: bool = True
     unsupported_reason: str | None = None
     #: Availability of per-process attribution for this device.
@@ -49,10 +54,12 @@ SCENARIOS: dict[str, Scenario] = {
         name="two-nvidia",
         description="Two healthy NVIDIA GPUs — the happy path (V-1).",
         devices=(
+            # The two activity figures are deliberately far apart on each device, so V-5
+            # fails loudly if the panel ever renders one where the other belongs.
             DeviceSpec("GPU-fake-0001", "GeForce RTX 4090", memory_total=_gib(24),
-                       memory_used=_gib(6), utilization=42),
+                       memory_used=_gib(6), utilization=42, memory_utilization=12),
             DeviceSpec("GPU-fake-0002", "GeForce RTX 4090", memory_total=_gib(24),
-                       memory_used=_gib(11), utilization=88),
+                       memory_used=_gib(11), utilization=88, memory_utilization=31),
         ),
     ),
     "processes-churn": Scenario(
@@ -92,6 +99,7 @@ SCENARIOS: dict[str, Scenario] = {
                 memory_total=_gib(2),
                 memory_used=_gib(1),
                 utilization=None,
+                memory_utilization=None,
             ),
         ),
     ),
@@ -124,8 +132,11 @@ SCENARIOS: dict[str, Scenario] = {
         devices=(
             DeviceSpec("GPU-fake-nv", "GeForce RTX 4090", vendor=Vendor.NVIDIA,
                        memory_total=_gib(24), memory_used=_gib(8)),
+            # Compute activity but no memory-interface figure: FR-023 says the available one
+            # must still be shown and the other marked unavailable.
             DeviceSpec("GPU-fake-amd", "Radeon RX 7900 XTX", vendor=Vendor.AMD,
-                       memory_total=_gib(24), memory_used=_gib(4), utilization=12),
+                       memory_total=_gib(24), memory_used=_gib(4), utilization=12,
+                       memory_utilization=None),
             DeviceSpec("GPU-fake-intel", "Arc A770", vendor=Vendor.INTEL,
                        memory_total=_gib(16), memory_used=_gib(2), utilization=None,
                        hangs=True),

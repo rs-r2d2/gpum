@@ -36,6 +36,30 @@ def _percent_value(metric) -> float | None:
         return max(0.0, min(100.0, float(metric.value)))
     return None
 
+
+def _activity_text(subject: str, metric) -> str:
+    """``<subject> busy N% of the time``, or a plain unavailable statement.
+
+    The two need different sentences, not one sentence with a substituted value. Splicing an
+    availability state into the measured wording produced "GPU compute busy Not supported of
+    the time" — which reads as a broken sentence first and an unavailable metric second, and
+    FR-011 asks for the reverse.
+    """
+    if metric.is_measurement and metric.value is not None:
+        return f"{subject} busy  {av.percent_text(metric)} of the time"
+    return f"{subject} activity  {av.percent_text(metric)}"
+
+
+def _activity_tooltip(explanation: str, metric) -> str:
+    """The standing explanation, plus *why* the figure is missing when it is.
+
+    FR-011 requires unavailability to carry a reason. The label has room only for the state,
+    so the reason lives here rather than being dropped.
+    """
+    if metric.is_measurement:
+        return explanation
+    return f"{av.tooltip_for(metric)}\n\n{explanation}"
+
 #: FR-010: the explanation must be reachable from the panel. The figure's common name — "core
 #: utilization" — describes something the hardware does not report.
 _ACTIVITY_EXPLANATION = (
@@ -205,15 +229,15 @@ class DevicePanel(QFrame):
         respective engine was busy.
         """
         compute = device.utilization_gpu
-        self._compute_label.setText(f"GPU compute busy  {av.percent_text(compute)} of the time")
-        self._compute_label.setToolTip(_ACTIVITY_EXPLANATION)
+        self._compute_label.setText(_activity_text("GPU compute", compute))
+        self._compute_label.setToolTip(_activity_tooltip(_ACTIVITY_EXPLANATION, compute))
         self._set_meter(self._compute_bar, _percent_value(compute))
 
         mem = device.utilization_memory
-        self._mem_activity_label.setText(
-            f"Memory interface busy  {av.percent_text(mem)} of the time"
+        self._mem_activity_label.setText(_activity_text("Memory interface", mem))
+        self._mem_activity_label.setToolTip(
+            _activity_tooltip(_MEMORY_ACTIVITY_EXPLANATION, mem)
         )
-        self._mem_activity_label.setToolTip(_MEMORY_ACTIVITY_EXPLANATION)
         self._set_meter(self._mem_activity_bar, _percent_value(mem))
 
     def _render_power(self, device: GpuDevice) -> None:

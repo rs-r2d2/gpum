@@ -138,16 +138,29 @@ class FakeBackend:
 
         used = spec.memory_used
         util = spec.utilization
+        mem_util = spec.memory_utilization
         if jitter:
             wobble = self._rng.uniform(-0.05, 0.05)
             used = max(0, min(spec.memory_total, int(used * (1 + wobble))))
             if util is not None:
                 util = max(0, min(100, util + self._rng.randint(-8, 8)))
+            if mem_util is not None:
+                mem_util = max(0, min(100, mem_util + self._rng.randint(-8, 8)))
 
         utilization = (
             MetricValue.available(util, sampled_at=now)
             if util is not None
             else MetricValue.unsupported("utilization is not reported by this device")
+        )
+        # Simulated independently of compute activity, because the two are independent in
+        # reality — a memory-bound workload saturates this one while compute idles, which is
+        # the whole reason US3 shows both.
+        memory_utilization = (
+            MetricValue.available(mem_util, sampled_at=now)
+            if mem_util is not None
+            else MetricValue.unsupported(
+                "memory-interface activity is not reported by this device"
+            )
         )
         return GpuDevice(
             id=DeviceId(spec.vendor, spec.key, index),
@@ -156,7 +169,7 @@ class FakeBackend:
             memory_total=MetricValue.available(spec.memory_total, sampled_at=now),
             memory_used=MetricValue.available(used, sampled_at=now),
             utilization_gpu=utilization,
-            utilization_memory=MetricValue.unsupported("not simulated"),
+            utilization_memory=memory_utilization,
             attribution=spec.attribution,
             attribution_reason=spec.attribution_reason,
             last_sampled_at=now,
