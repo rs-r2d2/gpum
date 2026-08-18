@@ -1,0 +1,21 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./site",
+      "url": [
+        "http://localhost/index.html",
+        "http://localhost/download/index.html",
+        "http://localhost/usage/index.html",
+        "http://localhost/reference/index.html",
+        "http://localhost/contributing/index.html"
+      ],
+      "settings": { "onlyCategories": ["accessibility"] }
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 0.95 }]
+      }
+    },
+    "upload": { "target": "filesystem", "outputDir": ".lighthouseci" }
+  }
+}

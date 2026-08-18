@@ -1,0 +1,101 @@
+# Site configuration for the GPUM documentation site (spec 007-github-pages-site).
+#
+# docs_dir is the repository's existing docs/ directory, deliberately: the capability matrix and
+# the vendor guide then *are* site pages rather than copies of them, so a constitution Principle
+# II amendment updates the site in the same commit (research D-03).
+site_name: GPUM
+site_description: Live GPU memory, activity, power and process monitor for Linux — read-only, no telemetry.
+site_url: https://rs-r2d2.github.io/gpum/
+# repo_url/repo_name are deliberately NOT set. The theme's repository header fetches stars and
+# forks from api.github.com in the *visitor's* browser, which is a third-party request (FR-006).
+# The repository is linked from page content and the footer instead, which fetches nothing.
+copyright: >-
+  MIT licensed &middot;
+  <a href="https://github.com/rs-r2d2/gpum">Source on GitHub</a> &middot;
+  No analytics, no tracking, nothing leaves your machine.
+
+docs_dir: docs
+site_dir: site
+
+# The generated download block is an include fragment, not a page: it is embedded by download.md
+# and index.md and must not be built as a standalone page or listed in the nav.
+exclude_docs: |
+  _snippets/*
+
+# Regenerates docs/_snippets/release.md before every build and every serve, so no build can
+# proceed with a stale or missing download block (contracts/publishing.md).
+hooks:
+  - tools/mkdocs_hooks.py
+
+theme:
+  name: material
+  # MUST stay false. The default fetches Google Fonts from the *visitor's* browser, which is a
+  # third-party request (FR-006, SC-012). A tool whose headline promise is "it never phones home"
+  # cannot have a website that does. tests/docs/test_no_third_party.py enforces this.
+  font: false
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    # Follows the reader's system preference; both directions reachable by an explicit toggle.
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: [docs]
+      check_paths: true
+
+nav:
+  - Overview: index.md
+  - Download: download.md
+  - Usage:
+      - Reading the window: usage/index.md
+      - Controls and settings: usage/controls.md
+      - The process table: usage/processes.md
+      - Try it without a GPU: usage/demo-mode.md
+      - Troubleshooting: usage/troubleshooting.md
+  - Reference:
+      - Overview: reference/index.md
+      - Command line: reference/cli.md
+      - Backend interface: reference/backend-interface.md
+      - Data model: reference/data-model.md
+      - Backend registry: reference/registry.md
+      - Platform adapters: reference/adapters.md
+      - Adding a vendor: adding-a-vendor.md
+  - Contributing:
+      - Overview: contributing/index.md
+      - Development setup: contributing/development.md
+      - Quality gates: contributing/quality-gates.md
+      - Scope and boundaries: contributing/scope.md
+      - Building the bundle: building.md
+  - Project:
+      - Capability matrix: capability-matrix.md
+      - Licences: licenses.md

@@ -1,0 +1,16 @@
+[
+  {
+    "tag_name": "v0.1.0-alpha.2",
+    "name": "0.1.0-alpha.2",
+    "draft": false,
+    "prerelease": true,
+    "published_at": "2026-08-17T21:00:00Z",
+    "html_url": "https://github.com/rs-r2d2/gpum/releases/tag/v0.1.0-alpha.2",
+    "assets": [
+      {
+        "name": "source-notes.txt",
+        "browser_download_url": "https://github.com/rs-r2d2/gpum/releases/download/v0.1.0-alpha.2/source-notes.txt"
+      }
+    ]
+  }
+]

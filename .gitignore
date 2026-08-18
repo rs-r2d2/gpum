@@ -230,3 +230,7 @@ Thumbs.db
 # GPUM build output
 *.AppImage
 squashfs-root/
+
+# GPUM documentation site (spec 007)
+docs/_snippets/
+site/

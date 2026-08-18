@@ -19,6 +19,14 @@ note at the bottom of this file for what was contradictory before and what MIT o
 pytest (MIT), pytest-qt (MIT), pytest-cov (MIT), ruff (MIT), mypy (MIT) — all permissive, and
 none are distributed with the application.
 
+## Documentation tooling
+
+The site under `https://rs-r2d2.github.io/gpum/` is built with MkDocs (BSD-2-Clause) and Material
+for MkDocs (MIT). Both are permissive and compatible with MIT, and — the point worth recording —
+both are **build-time only**. They are declared in the `docs` extra, are not installed by the
+runtime or `dev` extras, and no part of them is distributed with the application or the AppImage.
+Nothing in this section changes the bundle's obligations described below.
+
 ## Review rule
 
 Adding a GPL-licensed runtime dependency would require relicensing the project and **must** be

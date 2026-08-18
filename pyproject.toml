@@ -37,6 +37,12 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+# Documentation site tooling (spec 007). Build-time only, never a runtime dependency, and
+# deliberately separate from dev so `pip install -e ".[dev]" && pytest` stays as fast as it was.
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
 all = ["gpum[nvidia]"]
 # Build-time only. Deliberately not a runtime dependency.
 packaging-tools = ["pyinstaller>=6.0"]
@@ -64,9 +70,10 @@ files = ["src/gpum/core", "src/gpum/backends/base.py", "src/gpum/adapters/base.p
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m 'not hardware and not packaging' -q"
+addopts = "-m 'not hardware and not packaging and not network' -q"
 markers = [
     "hardware: requires real GPU hardware; deselected by default (constitution Principle IV)",
     "packaging: requires a built AppImage; deselected by default",
+    "network: reaches the public internet (link and release checks); deselected by default",
 ]
 # QT_QPA_PLATFORM=offscreen is set in tests/conftest.py so no plugin is required.

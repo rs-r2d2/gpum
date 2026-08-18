@@ -1,0 +1,84 @@
+# Documentation site build and deployment (spec 007-github-pages-site).
+#
+# Deploy semantics that matter: `deploy` needs `build`, so any failed check leaves the previously
+# published site live and surfaces as a red run rather than as silence (FR-037).
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - tools/gen_release_snippet.py
+      - tools/mkdocs_hooks.py
+      - tests/docs/**
+      - README.md
+      - .github/workflows/docs.yml
+  pull_request:
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - tools/gen_release_snippet.py
+      - tools/mkdocs_hooks.py
+      - tests/docs/**
+      - README.md
+      - .github/workflows/docs.yml
+  # A new release must reach the download page immediately, not at the next docs commit: the
+  # download block is generated from the release list (contracts/publishing.md).
+  release:
+    types: [published]
+  # Catches release state that changed without producing a repository event.
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+# Least privilege (constitution Principle V). Nothing here needs write access to repository
+# contents, which is why the Pages actions are used instead of pushing a gh-pages branch.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never interrupt a deploy in flight; queue behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[docs,dev]"
+      - name: Documentation drift checks
+        run: pytest tests/docs
+      - name: Build site
+        run: mkdocs build --strict
+      - name: Third-party request scan
+        run: pytest tests/docs/test_no_third_party.py
+      - name: External links and download URL
+        run: pytest tests/docs -m network
+      - name: Accessibility audit
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: .github/lighthouserc.json
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
