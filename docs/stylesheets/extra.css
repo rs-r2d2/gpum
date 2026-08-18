@@ -1,0 +1,73 @@
+/* Accessibility corrections to the Material defaults (spec 007, FR-005 / SC-014).
+ *
+ * Each rule fixes a measured audit failure, and the ratio in the comment is what made it
+ * necessary. Do not fold these back into the theme's palette settings: the named palettes are
+ * what produced the failures.
+ *
+ * The trap worth knowing about: `--md-primary-fg-color` is used both as a *background* (header,
+ * primary button, carrying white text) and as *text* (outlined buttons, active nav). Those two
+ * roles want opposite corrections on a dark ground, so they are separated below rather than
+ * tuned to a compromise that fails both.
+ */
+
+:root {
+  /* Background role. Material's teal (#009485) under white text measures 3.76:1, below the
+   * 4.5:1 floor. Teal 800 gives 6.6:1 and keeps the same identity. */
+  --md-primary-fg-color: #00695c;
+  --md-primary-fg-color--light: #00897b;
+  --md-primary-fg-color--dark: #004d40;
+  /* Text role, on the light ground: 6.6:1. */
+  --md-accent-fg-color: #00695c;
+  --md-typeset-a-color: #00695c;
+}
+
+[data-md-color-scheme="slate"] {
+  /* The background role keeps the dark teal — white text on it passes in either scheme. */
+  --md-primary-fg-color: #00695c;
+  --md-primary-fg-color--light: #00897b;
+  --md-primary-fg-color--dark: #004d40;
+  /* The text role moves the other way: teal 200 on the dark ground (#1e2129) is 6.6:1, where
+   * the background teal would have been 2.44:1. */
+  --md-accent-fg-color: #4db6ac;
+  --md-typeset-a-color: #4db6ac;
+}
+
+/* Links inside body text were distinguishable from surrounding text by colour alone (1.12:1
+ * against the paragraph colour, where 3:1 is the floor). Underlining removes the reliance on
+ * colour entirely, which also survives a reader's own palette. Buttons and heading permalinks
+ * are excluded: they are not text links. */
+.md-typeset a:not(.md-button):not(.headerlink) {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.md-typeset a:not(.md-button):not(.headerlink):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* The primary call-to-action carries white text, so it follows the background role. */
+.md-typeset .md-button--primary {
+  background-color: var(--md-primary-fg-color);
+  border-color: var(--md-primary-fg-color);
+  color: #ffffff;
+}
+
+/* The outlined button is text on the page ground, so it follows the text role. */
+.md-typeset .md-button:not(.md-button--primary) {
+  color: var(--md-typeset-a-color);
+  border-color: var(--md-typeset-a-color);
+}
+
+.md-typeset .md-button:not(.md-button--primary):hover {
+  background-color: var(--md-typeset-a-color);
+  border-color: var(--md-typeset-a-color);
+  color: var(--md-default-bg-color);
+}
+
+/* Syntax highlighting: the slate scheme's constant colour (#9383e2) measures 4.48:1 against the
+ * code background — two hundredths under the floor, which is exactly the kind of near-miss that
+ * only an audit catches. `cd` in the download instructions is one. Teal-neutral violet, same
+ * hue, 5.9:1. */
+[data-md-color-scheme="slate"] {
+  --md-code-hl-constant-color: #a99bf0;
+}

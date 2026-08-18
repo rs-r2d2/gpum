@@ -60,6 +60,15 @@ theme:
         icon: material/brightness-4
         name: Switch to system preference
 
+extra_css:
+  - stylesheets/extra.css
+
+# Search is deliberately disabled. Material's search dialog carries role="dialog" with no
+# accessible name, which fails an accessibility audit on every page, and fixing it means
+# maintaining a template override of the theme's own partial. Site search was already out of
+# scope for the first version of this site (spec 007 assumptions), and navigation covers it.
+plugins: []
+
 markdown_extensions:
   - admonition
   - attr_list
