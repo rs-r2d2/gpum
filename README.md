@@ -1,4 +1,4 @@
-# GPUM 📊
+# GPUM(GPU monitor) 📊
 
 **A friendly, live view of what your GPU is actually doing** — memory, activity, power, and the
 processes using it, refreshing every second without ever freezing on you.

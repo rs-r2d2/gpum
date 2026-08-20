@@ -3,7 +3,7 @@
 # docs_dir is the repository's existing docs/ directory, deliberately: the capability matrix and
 # the vendor guide then *are* site pages rather than copies of them, so a constitution Principle
 # II amendment updates the site in the same commit (research D-03).
-site_name: GPUM
+site_name: GPUM (GPU monitor)
 site_description: Live GPU memory, activity, power and process monitor for Linux — read-only, no telemetry.
 site_url: https://rs-r2d2.github.io/gpum/
 # repo_url/repo_name are deliberately NOT set. The theme's repository header fetches stars and
